@@ -38,7 +38,9 @@ router.post('/', async (req, res) => {
   const payload = req.body;
   const result = await userController.createOrUpdateUser(payload);
   if (result.success) {
-    res.status(201).json(result.data);
+    // Supabase returns array, send first item (single user object)
+    const userData = Array.isArray(result.data) ? result.data[0] : result.data;
+    res.status(201).json(userData);
   } else {
     res.status(400).json({ error: result.error });
   }
