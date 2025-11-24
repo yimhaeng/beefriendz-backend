@@ -30,6 +30,22 @@ async function getGroupById(groupId) {
   }
 }
 
+// ดึงกลุ่มตาม line_group_id (สำหรับเช็คว่ากลุ่มนี้สร้างแล้วหรือยัง)
+async function getGroupByLineId(lineGroupId) {
+  try {
+    const { data, error } = await supabase
+      .from('groups')
+      .select('group_id, line_group_id, group_name, created_by, created_at, updated_at')
+      .eq('line_group_id', lineGroupId)
+      .maybeSingle(); // ใช้ maybeSingle() แทน single() เพื่อไม่ error ถ้าไม่เจอ
+
+    if (error) throw error;
+    return { success: true, data }; // data จะเป็น null ถ้าไม่เจอ
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 // สร้างกลุ่มใหม่
 async function createGroup(groupObj) {
   try {
@@ -83,6 +99,7 @@ async function deleteGroup(groupId) {
 module.exports = {
   getGroups,
   getGroupById,
+  getGroupByLineId,
   createGroup,
   updateGroup,
   deleteGroup

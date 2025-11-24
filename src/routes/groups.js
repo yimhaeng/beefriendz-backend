@@ -9,6 +9,14 @@ router.get('/', async (req, res) => {
   else res.status(500).json({ error: result.error });
 });
 
+// GET /api/groups/line/:lineGroupId - get group by LINE Group ID
+router.get('/line/:lineGroupId', async (req, res) => {
+  const { lineGroupId } = req.params;
+  const result = await groupController.getGroupByLineId(lineGroupId);
+  if (result.success) res.json(result.data); // data จะเป็น null ถ้ายังไม่มีกลุ่ม
+  else res.status(500).json({ error: result.error });
+});
+
 // GET /api/groups/:id - get group detail
 router.get('/:id', async (req, res) => {
   const { id } = req.params;

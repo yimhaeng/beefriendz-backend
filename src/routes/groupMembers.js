@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const gmController = require('../controllers/groupMemberController');
 
+// GET /api/group-members/check/:groupId/:userId - check if user is member
+// *** ต้องอยู่ก่อน /group/:groupId เพื่อไม่ให้ทับกัน ***
+router.get('/check/:groupId/:userId', async (req, res) => {
+  const { groupId, userId } = req.params;
+  const result = await gmController.checkMembership(groupId, userId);
+  if (result.success) res.json({ isMember: result.isMember, data: result.data });
+  else res.status(500).json({ error: result.error });
+});
+
 // GET /api/group-members/group/:groupId - list members of a group
 router.get('/group/:groupId', async (req, res) => {
   const { groupId } = req.params;
@@ -14,8 +23,13 @@ router.get('/group/:groupId', async (req, res) => {
 router.post('/', async (req, res) => {
   const { group_id, user_id, role } = req.body;
   const result = await gmController.addMember(group_id, user_id, role);
-  if (result.success) res.status(201).json(result.data);
-  else res.status(400).json({ error: result.error });
+  if (result.success) {
+    // ถ้าเป็นสมาชิกอยู่แล้ว ส่ง 200 แทน 201
+    const statusCode = result.alreadyMember ? 200 : 201;
+    res.status(statusCode).json({ ...result.data, alreadyMember: result.alreadyMember });
+  } else {
+    res.status(400).json({ error: result.error });
+  }
 });
 
 // PUT /api/group-members/:id - update member role

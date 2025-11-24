@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const routes = require('./routes/index');
 const usersRoute = require('./routes/users');
 const projectsRoute = require('./routes/projects');
+const tasksRoute = require('./routes/tasks');
 const groupsRoute = require('./routes/groups');
 const groupMembersRoute = require('./routes/groupMembers');
 
@@ -42,6 +43,7 @@ app.use((req, res, next) => {
 app.use('/api/data', routes);
 app.use('/api/users', usersRoute);
 app.use('/api/projects', projectsRoute);
+app.use('/api/tasks', tasksRoute);
 app.use('/api/groups', groupsRoute);
 app.use('/api/group-members', groupMembersRoute);
 

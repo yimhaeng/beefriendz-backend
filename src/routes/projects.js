@@ -2,34 +2,24 @@ const express = require('express');
 const router = express.Router();
 const projectController = require('../controllers/projectController');
 
-// ดึงโปรเจกต์ของ user ตาม line_id (จาก LIFF)
-router.get('/by-line/:lineId', async (req, res) => {
-  const { lineId } = req.params;
-  const result = await projectController.getProjectsByLineId(lineId);
+// ========== PROJECT ROUTES ==========
+
+// GET /api/projects/group/:groupId - Get all projects by group
+router.get('/group/:groupId', async (req, res) => {
+  const { groupId } = req.params;
+  const result = await projectController.getProjectsByGroup(groupId);
   
   if (result.success) {
     res.json(result.data);
   } else {
-    res.status(400).json({ error: result.error });
+    res.status(500).json({ error: result.error });
   }
 });
 
-// ดึงโปรเจกต์ของ user ตาม user_id
-router.get('/user/:userId', async (req, res) => {
-  const { userId } = req.params;
-  const result = await projectController.getProjectsByUserId(userId);
-  
-  if (result.success) {
-    res.json(result.data);
-  } else {
-    res.status(400).json({ error: result.error });
-  }
-});
-
-// ดึงรายละเอียดโปรเจกต์พร้อมกับงานย่อย
-router.get('/:projectId', async (req, res) => {
-  const { projectId } = req.params;
-  const result = await projectController.getProjectDetailById(projectId);
+// GET /api/projects/:id - Get single project
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  const result = await projectController.getProjectById(id);
   
   if (result.success) {
     res.json(result.data);
@@ -38,19 +28,9 @@ router.get('/:projectId', async (req, res) => {
   }
 });
 
-// สร้างโปรเจกต์ใหม่
+// POST /api/projects - Create new project
 router.post('/', async (req, res) => {
-  const { userId, name, description, status } = req.body;
-  
-  if (!userId || !name) {
-    return res.status(400).json({ error: 'userId and name are required' });
-  }
-  
-  const result = await projectController.createProject(userId, {
-    name,
-    description,
-    status
-  });
+  const result = await projectController.createProject(req.body);
   
   if (result.success) {
     res.status(201).json(result.data);
@@ -59,10 +39,10 @@ router.post('/', async (req, res) => {
   }
 });
 
-// แก้ไขโปรเจกต์
-router.put('/:projectId', async (req, res) => {
-  const { projectId } = req.params;
-  const result = await projectController.updateProject(projectId, req.body);
+// PUT /api/projects/:id - Update project
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const result = await projectController.updateProject(id, req.body);
   
   if (result.success) {
     res.json(result.data);
@@ -71,15 +51,29 @@ router.put('/:projectId', async (req, res) => {
   }
 });
 
-// ลบโปรเจกต์
-router.delete('/:projectId', async (req, res) => {
-  const { projectId } = req.params;
-  const result = await projectController.deleteProject(projectId);
+// DELETE /api/projects/:id - Delete project
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  const result = await projectController.deleteProject(id);
   
   if (result.success) {
-    res.json(result.message);
+    res.json({ message: result.message });
   } else {
     res.status(400).json({ error: result.error });
+  }
+});
+
+// ========== PROJECT LOGS ==========
+
+// GET /api/projects/:id/logs - Get activity logs for project
+router.get('/:id/logs', async (req, res) => {
+  const { id } = req.params;
+  const result = await projectController.getLogsByProject(id);
+  
+  if (result.success) {
+    res.json(result.data);
+  } else {
+    res.status(500).json({ error: result.error });
   }
 });
 
