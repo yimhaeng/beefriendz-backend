@@ -46,6 +46,54 @@ async function getGroupByLineId(lineGroupId) {
   }
 }
 
+// สร้างหรืออัพเดตกลุ่มจาก LINE (สำหรับ n8n)
+async function createOrUpdateFromLine(lineGroupId, userId, groupName = null) {
+  try {
+    if (!lineGroupId || !userId) {
+      throw new Error('lineGroupId and userId are required');
+    }
+
+    // เช็คว่ามีกลุ่มนี้แล้วหรือยัง
+    const existingResult = await getGroupByLineId(lineGroupId);
+    if (!existingResult.success) {
+      throw new Error(existingResult.error);
+    }
+
+    // ถ้ามีแล้ว ส่งข้อมูลกลุ่มที่มีอยู่กลับไป
+    if (existingResult.data) {
+      return { 
+        success: true, 
+        data: existingResult.data, 
+        created: false,
+        message: 'Group already exists'
+      };
+    }
+
+    // ถ้ายังไม่มี สร้างกลุ่มใหม่
+    const newGroupName = groupName || 'กลุ่ม LINE';
+    const { data, error } = await supabase
+      .from('groups')
+      .insert([{
+        line_group_id: lineGroupId,
+        group_name: newGroupName,
+        created_by: userId
+      }])
+      .select();
+
+    if (error) throw error;
+    
+    const newGroup = Array.isArray(data) ? data[0] : data;
+    return { 
+      success: true, 
+      data: newGroup, 
+      created: true,
+      message: 'Group created successfully'
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 // สร้างกลุ่มใหม่
 async function createGroup(groupObj) {
   try {
@@ -100,6 +148,7 @@ module.exports = {
   getGroups,
   getGroupById,
   getGroupByLineId,
+  createOrUpdateFromLine,
   createGroup,
   updateGroup,
   deleteGroup
