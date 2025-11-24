@@ -4,7 +4,7 @@ const groupController = require('../controllers/groupController');
 
 // POST /api/groups/from-line - create or update group from LINE (for n8n)
 router.post('/from-line', async (req, res) => {
-  const { line_group_id, user_id, group_name } = req.body;
+  const { line_group_id, created_by: user_id, group_name } = req.body;
   const result = await groupController.createOrUpdateFromLine(line_group_id, user_id, group_name);
   if (result.success) {
     const statusCode = result.created ? 201 : 200;
