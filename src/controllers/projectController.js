@@ -43,6 +43,24 @@ async function getProjectById(projectId) {
 // Create new project
 async function createProject(projectData) {
   try {
+    // เช็คว่ากลุ่มนี้มีโปรเจกต์แล้วหรือยัง
+    const { data: existingProject, error: checkError } = await supabase
+      .from('projects')
+      .select('project_id, project_name')
+      .eq('group_id', projectData.group_id)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    if (existingProject) {
+      return { 
+        success: false, 
+        error: `กลุ่มนี้มีโปรเจกต์แล้ว: "${existingProject.project_name}"`,
+        existingProjectId: existingProject.project_id
+      };
+    }
+
+    // ถ้ายังไม่มี ให้สร้างโปรเจกต์ใหม่
     const { data, error } = await supabase
       .from('projects')
       .insert([projectData])

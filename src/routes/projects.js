@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const projectController = require('../controllers/projectController');
+const groupController = require('../controllers/groupController');
+const lineController = require('../controllers/lineController');
 
 // ========== PROJECT ROUTES ==========
 
@@ -33,9 +35,31 @@ router.post('/', async (req, res) => {
   const result = await projectController.createProject(req.body);
   
   if (result.success) {
+    // ส่ง Flex Message ไปยังกลุ่ม LINE
+    try {
+      const groupResult = await groupController.getGroupById(req.body.group_id);
+      if (groupResult.success && groupResult.data.line_group_id) {
+        await lineController.sendProjectCreatedMessage(
+          groupResult.data.line_group_id,
+          result.data
+        );
+      }
+    } catch (err) {
+      console.error('[POST /api/projects] Error sending LINE message:', err);
+      // ไม่ error ออกมา เพราะโปรเจกต์สร้างสำเร็จแล้ว
+    }
+    
     res.status(201).json(result.data);
   } else {
-    res.status(400).json({ error: result.error });
+    // ถ้ากลุ่มมีโปรเจกต์แล้ว ให้ส่ง existingProjectId กลับไป
+    if (result.existingProjectId) {
+      res.status(409).json({ 
+        error: result.error,
+        existingProjectId: result.existingProjectId
+      });
+    } else {
+      res.status(400).json({ error: result.error });
+    }
   }
 });
 
