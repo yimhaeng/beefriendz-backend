@@ -11,6 +11,14 @@ router.get('/check/:groupId/:userId', async (req, res) => {
   else res.status(500).json({ error: result.error });
 });
 
+// GET /api/group-members/user/:userId - get all group memberships for a user
+router.get('/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const result = await gmController.getMembershipsByUserId(userId);
+  if (result.success) res.json(result.data);
+  else res.status(500).json({ error: result.error });
+});
+
 // GET /api/group-members/group/:groupId - list members of a group
 router.get('/group/:groupId', async (req, res) => {
   const { groupId } = req.params;

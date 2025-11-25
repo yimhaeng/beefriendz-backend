@@ -110,8 +110,30 @@ async function removeMember(memberId) {
   }
 }
 
+// ดึงข้อมูลการเป็นสมาชิกทั้งหมดของ user (ว่าอยู่กลุ่มไหนบ้าง)
+async function getMembershipsByUserId(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('group_members')
+      .select(`
+        id,
+        group_id,
+        user_id,
+        role,
+        joined_at
+      `)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   getMembersByGroupId,
+  getMembershipsByUserId,
   checkMembership,
   addMember,
   updateMember,
