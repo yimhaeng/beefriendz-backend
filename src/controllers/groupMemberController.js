@@ -1,15 +1,34 @@
 const supabase = require('../config/supabase');
 
-// ดึงสมาชิกทั้งหมดของกลุ่ม
+// ดึงสมาชิกทั้งหมดของกลุ่ม (พร้อมข้อมูล user)
 async function getMembersByGroupId(groupId) {
   try {
     const { data, error } = await supabase
       .from('group_members')
-      .select('id, group_id, user_id, role, joined_at')
+      .select(`
+        id,
+        group_id,
+        user_id,
+        role,
+        joined_at,
+        users!inner(user_id, display_name, picture_url)
+      `)
       .eq('group_id', groupId);
 
     if (error) throw error;
-    return { success: true, data };
+    
+    // Flatten the data: merge user info into member object
+    const flattenedData = data.map(member => ({
+      id: member.id,
+      group_id: member.group_id,
+      user_id: member.user_id,
+      role: member.role,
+      joined_at: member.joined_at,
+      display_name: member.users.display_name,
+      picture_url: member.users.picture_url,
+    }));
+    
+    return { success: true, data: flattenedData };
   } catch (error) {
     return { success: false, error: error.message };
   }

@@ -43,6 +43,8 @@ async function getProjectById(projectId) {
 // Create new project
 async function createProject(projectData) {
   try {
+    console.log('[createProject] Input data:', JSON.stringify(projectData, null, 2));
+    
     // เช็คว่ากลุ่มนี้มีโปรเจกต์แล้วหรือยัง
     const { data: existingProject, error: checkError } = await supabase
       .from('projects')
@@ -50,9 +52,13 @@ async function createProject(projectData) {
       .eq('group_id', projectData.group_id)
       .maybeSingle();
 
-    if (checkError) throw checkError;
+    if (checkError) {
+      console.error('[createProject] Check error:', checkError);
+      throw checkError;
+    }
 
     if (existingProject) {
+      console.log('[createProject] Project already exists:', existingProject);
       return { 
         success: false, 
         error: `กลุ่มนี้มีโปรเจกต์แล้ว: "${existingProject.project_name}"`,
@@ -61,14 +67,21 @@ async function createProject(projectData) {
     }
 
     // ถ้ายังไม่มี ให้สร้างโปรเจกต์ใหม่
+    console.log('[createProject] Inserting new project...');
     const { data, error } = await supabase
       .from('projects')
       .insert([projectData])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[createProject] Insert error:', error);
+      throw error;
+    }
+    
+    console.log('[createProject] Project created:', data);
     return { success: true, data: Array.isArray(data) ? data[0] : data };
   } catch (error) {
+    console.error('[createProject] Exception:', error);
     return { success: false, error: error.message };
   }
 }

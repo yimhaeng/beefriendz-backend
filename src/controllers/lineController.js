@@ -12,7 +12,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const liffUrl = process.env.LIFF_URL || 'https://beefriendz-liff.vercel.app';
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${projectData.project_id}`;
 
     const flexMessage = {

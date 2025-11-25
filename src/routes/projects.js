@@ -32,25 +32,33 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/projects - Create new project
 router.post('/', async (req, res) => {
+  console.log('[POST /api/projects] Received data:', JSON.stringify(req.body, null, 2));
+  
   const result = await projectController.createProject(req.body);
   
   if (result.success) {
+    console.log('[POST /api/projects] Project created successfully:', result.data.project_id);
+    
     // ส่ง Flex Message ไปยังกลุ่ม LINE
     try {
       const groupResult = await groupController.getGroupById(req.body.group_id);
       if (groupResult.success && groupResult.data.line_group_id) {
+        console.log('[POST /api/projects] Sending LINE message to group:', groupResult.data.line_group_id);
         await lineController.sendProjectCreatedMessage(
           groupResult.data.line_group_id,
           result.data
         );
+        console.log('[POST /api/projects] LINE message sent successfully');
       }
     } catch (err) {
-      console.error('[POST /api/projects] Error sending LINE message:', err);
+      console.error('[POST /api/projects] Error sending LINE message:', err.message);
       // ไม่ error ออกมา เพราะโปรเจกต์สร้างสำเร็จแล้ว
     }
     
     res.status(201).json(result.data);
   } else {
+    console.error('[POST /api/projects] Error creating project:', result.error);
+    
     // ถ้ากลุ่มมีโปรเจกต์แล้ว ให้ส่ง existingProjectId กลับไป
     if (result.existingProjectId) {
       res.status(409).json({ 
