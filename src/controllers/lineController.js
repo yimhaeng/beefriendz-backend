@@ -12,8 +12,12 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
+    // LIFF URL should be the LIFF endpoint, not the Vercel URL
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${projectData.project_id}`;
+    
+    console.log('[LINE] Sending message to group:', lineGroupId);
+    console.log('[LINE] Project URL:', projectUrl);
 
     const flexMessage = {
       type: 'flex',
