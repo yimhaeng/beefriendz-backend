@@ -15,7 +15,14 @@ async function getProjectsByGroup(groupId) {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return { success: true, data };
+    
+    // Parse phases from JSON string to array
+    const parsedData = data.map(project => ({
+      ...project,
+      phases: project.phases ? JSON.parse(project.phases) : null
+    }));
+    
+    return { success: true, data: parsedData };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -34,6 +41,12 @@ async function getProjectById(projectId) {
       .single();
 
     if (error) throw error;
+    
+    // Parse phases from JSON string to array
+    if (data && data.phases) {
+      data.phases = JSON.parse(data.phases);
+    }
+    
     return { success: true, data };
   } catch (error) {
     return { success: false, error: error.message };
