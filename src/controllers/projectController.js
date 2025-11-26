@@ -192,6 +192,16 @@ async function createTask(taskData) {
 // Update task
 async function updateTask(taskId, taskData) {
   try {
+    // ดึงข้อมูลงานเก่าก่อน (เพื่อเปรียบเทียบสถานะ)
+    const { data: oldTask, error: fetchError } = await supabase
+      .from('project_tasks')
+      .select('*')
+      .eq('task_id', taskId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // อัปเดตงาน
     const { data, error } = await supabase
       .from('project_tasks')
       .update(taskData)
@@ -199,6 +209,28 @@ async function updateTask(taskId, taskData) {
       .select();
 
     if (error) throw error;
+
+    // ถ้ามีการเปลี่ยนสถานะ ให้บันทึก activity log
+    if (taskData.status && oldTask.status !== taskData.status) {
+      const logData = {
+        project_id: oldTask.project_id,
+        task_id: taskId,
+        user_id: taskData.updated_by || oldTask.assigned_to, // ใช้ updated_by ถ้ามี ไม่งั้นใช้ assigned_to
+        old_status: oldTask.status,
+        new_status: taskData.status,
+        action: 'status_change',
+      };
+
+      const { error: logError } = await supabase
+        .from('activity_logs')
+        .insert([logData]);
+
+      if (logError) {
+        console.error('Failed to create activity log:', logError);
+        // ไม่ throw error เพื่อไม่ให้การอัปเดต task ล้มเหลว
+      }
+    }
+
     return { success: true, data: Array.isArray(data) ? data[0] : data };
   } catch (error) {
     return { success: false, error: error.message };
