@@ -218,10 +218,11 @@ async function updateTask(taskId, taskData) {
       const logData = {
         project_id: oldTask.project_id,
         task_id: taskId,
-        user_id: updated_by || oldTask.assigned_to, // ใช้ updated_by ถ้ามี ไม่งั้นใช้ assigned_to
-        old_status: oldTask.status,
-        new_status: taskData.status,
-        action: 'status_change',
+        user_id: updated_by || oldTask.assigned_to,
+        action_type: 'status_change',
+        description: `เปลี่ยนสถานะจาก ${oldTask.status} เป็น ${taskData.status}`,
+        old_value: oldTask.status,
+        new_value: taskData.status,
       };
 
       const { error: logError } = await supabase
