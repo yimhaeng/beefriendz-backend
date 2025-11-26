@@ -201,10 +201,13 @@ async function updateTask(taskId, taskData) {
 
     if (fetchError) throw fetchError;
 
+    // ลบ updated_by ออกจาก taskData เพื่อไม่ให้ส่งไปยัง database
+    const { updated_by, ...taskUpdateData } = taskData;
+
     // อัปเดตงาน
     const { data, error } = await supabase
       .from('project_tasks')
-      .update(taskData)
+      .update(taskUpdateData)
       .eq('task_id', taskId)
       .select();
 
@@ -215,7 +218,7 @@ async function updateTask(taskId, taskData) {
       const logData = {
         project_id: oldTask.project_id,
         task_id: taskId,
-        user_id: taskData.updated_by || oldTask.assigned_to, // ใช้ updated_by ถ้ามี ไม่งั้นใช้ assigned_to
+        user_id: updated_by || oldTask.assigned_to, // ใช้ updated_by ถ้ามี ไม่งั้นใช้ assigned_to
         old_status: oldTask.status,
         new_status: taskData.status,
         action: 'status_change',
