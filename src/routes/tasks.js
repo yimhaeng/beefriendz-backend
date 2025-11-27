@@ -76,25 +76,9 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   
-  // Get old task data for logging
-  const oldTask = await projectController.getTaskById(id);
-  
   const result = await projectController.updateTask(id, req.body);
   
   if (result.success) {
-    // Create activity log if status changed
-    if (oldTask.success && req.body.status && oldTask.data.status !== req.body.status) {
-      await projectController.createLog({
-        project_id: result.data.project_id,
-        task_id: id,
-        user_id: req.body.updated_by || result.data.assigned_to,
-        action_type: 'status_changed',
-        description: `เปลี่ยนสถานะจาก "${oldTask.data.status}" เป็น "${req.body.status}"`,
-        old_value: oldTask.data.status,
-        new_value: req.body.status,
-      });
-    }
-    
     res.json(result.data);
   } else {
     res.status(400).json({ error: result.error });

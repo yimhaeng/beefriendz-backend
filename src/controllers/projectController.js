@@ -225,13 +225,18 @@ async function updateTask(taskId, taskData) {
         new_value: taskData.status,
       };
 
-      const { error: logError } = await supabase
+      console.log('[updateTask] Creating activity log:', logData);
+
+      const { data: logResult, error: logError } = await supabase
         .from('activity_logs')
-        .insert([logData]);
+        .insert([logData])
+        .select();
 
       if (logError) {
         console.error('Failed to create activity log:', logError);
         // ไม่ throw error เพื่อไม่ให้การอัปเดต task ล้มเหลว
+      } else {
+        console.log('[updateTask] Activity log created:', logResult);
       }
     }
 
