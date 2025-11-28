@@ -254,27 +254,6 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'สถานะเดิม:',
-                      size: 'sm',
-                      color: '#6B7280',
-                      flex: 0
-                    },
-                    {
-                      type: 'text',
-                      text: `${oldStatusInfo.emoji} ${oldStatusInfo.text}`,
-                      size: 'sm',
-                      color: '#9CA3AF',
-                      align: 'end',
-                      decoration: 'line-through'
-                    }
-                  ]
-                },
-                {
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
                       text: 'สถานะใหม่:',
                       size: 'sm',
                       color: '#6B7280',
@@ -380,7 +359,198 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
   }
 }
 
+/**
+ * ส่ง Flex Message แจ้งเตือนงานที่ใกล้ถึง deadline
+ */
+async function sendDeadlineReminder(lineGroupId, tasksData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    if (!tasksData || tasksData.length === 0) {
+      console.log('[LINE] No tasks to send deadline reminder');
+      return { success: true, message: 'No tasks to remind' };
+    }
+
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+
+    // สร้าง bubble สำหรับแต่ละงาน
+    const taskBubbles = tasksData.map(task => {
+      const deadlineDate = new Date(task.deadline);
+      const today = new Date();
+      const daysLeft = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+      
+      const urgencyColor = daysLeft <= 1 ? '#EF4444' : daysLeft <= 2 ? '#F59E0B' : '#10B981';
+      const urgencyEmoji = daysLeft <= 1 ? '🔴' : daysLeft <= 2 ? '🟡' : '🟢';
+      const urgencyText = daysLeft <= 0 ? 'เลยเดดไลน์!' : daysLeft === 1 ? 'พรุ่งนี้!' : `อีก ${daysLeft} วัน`;
+
+      return {
+        type: 'bubble',
+        hero: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: `${urgencyEmoji} ${urgencyText}`,
+              weight: 'bold',
+              size: 'lg',
+              color: '#FFFFFF'
+            }
+          ],
+          backgroundColor: urgencyColor,
+          paddingAll: '15px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: task.task_name,
+              weight: 'bold',
+              size: 'md',
+              wrap: true,
+              color: '#1F2937'
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              margin: 'md',
+              contents: [
+                {
+                  type: 'text',
+                  text: '📋',
+                  size: 'sm',
+                  flex: 0
+                },
+                {
+                  type: 'text',
+                  text: task.project?.project_name || 'ไม่ระบุโปรเจกต์',
+                  size: 'sm',
+                  color: '#6B7280',
+                  wrap: true,
+                  margin: 'sm'
+                }
+              ]
+            },
+            {
+              type: 'separator',
+              margin: 'md'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'md',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📅 เดดไลน์:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: deadlineDate.toLocaleDateString('th-TH', { 
+                        year: 'numeric',
+                        month: 'long', 
+                        day: 'numeric' 
+                      }),
+                      size: 'sm',
+                      color: '#374151',
+                      align: 'end',
+                      weight: 'bold'
+                    }
+                  ]
+                },
+                ...(task.assigned_user ? [{
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '👤 ผู้รับผิดชอบ:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: task.assigned_user.display_name,
+                      size: 'sm',
+                      color: '#374151',
+                      align: 'end'
+                    }
+                  ]
+                }] : [])
+              ]
+            }
+          ]
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              action: {
+                type: 'uri',
+                label: '📋 ดูรายละเอียด',
+                uri: `${liffUrl}/projectdetail/${task.project?.project_id || ''}`
+              },
+              color: urgencyColor,
+              height: 'sm'
+            }
+          ]
+        }
+      };
+    });
+
+    // สร้าง carousel message
+    const flexMessage = {
+      type: 'flex',
+      altText: `⏰ แจ้งเตือน: มี ${tasksData.length} งานใกล้ถึงเดดไลน์`,
+      contents: {
+        type: 'carousel',
+        contents: taskBubbles
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Deadline reminder sent successfully for', tasksData.length, 'tasks');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending deadline reminder:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
-  sendTaskStatusUpdateMessage
+  sendTaskStatusUpdateMessage,
+  sendDeadlineReminder
 };

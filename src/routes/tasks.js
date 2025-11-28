@@ -41,6 +41,64 @@ router.get('/near-deadline', async (req, res) => {
   }
 });
 
+// POST /api/tasks/send-deadline-reminders - Send LINE notifications for tasks near deadline
+router.post('/send-deadline-reminders', async (req, res) => {
+  try {
+    const daysAhead = parseInt(req.body.days) || 2;
+    
+    // ดึงงานที่ใกล้ถึง deadline
+    const tasksResult = await projectController.getTasksNearDeadline(daysAhead);
+    
+    if (!tasksResult.success) {
+      return res.status(500).json({ error: tasksResult.error });
+    }
+
+    const tasks = tasksResult.data;
+    
+    if (tasks.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No tasks near deadline',
+        tasksSent: 0 
+      });
+    }
+
+    // จัดกลุ่มงานตาม line_group_id
+    const tasksByGroup = {};
+    tasks.forEach(task => {
+      const lineGroupId = task.project?.groups?.line_group_id;
+      if (lineGroupId) {
+        if (!tasksByGroup[lineGroupId]) {
+          tasksByGroup[lineGroupId] = [];
+        }
+        tasksByGroup[lineGroupId].push(task);
+      }
+    });
+
+    // ส่ง notification ไปแต่ละกลุ่ม
+    const results = [];
+    for (const [lineGroupId, groupTasks] of Object.entries(tasksByGroup)) {
+      const result = await lineController.sendDeadlineReminder(lineGroupId, groupTasks);
+      results.push({
+        lineGroupId,
+        tasksCount: groupTasks.length,
+        success: result.success,
+        error: result.error
+      });
+    }
+
+    res.json({
+      success: true,
+      totalTasks: tasks.length,
+      groupsNotified: Object.keys(tasksByGroup).length,
+      results
+    });
+  } catch (error) {
+    console.error('[POST /api/tasks/send-deadline-reminders] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/tasks/:id - Get single task with details
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
