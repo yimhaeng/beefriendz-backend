@@ -1,0 +1,348 @@
+{
+  "tools": [
+    {
+      "name": "Add Task",
+      "description": "สร้างงานใหม่ในโปรเจกต์ ต้องระบุ project_id, task_name, created_by, และสามารถระบุ assigned_to, deadline, phase, priority, description ได้",
+      "node_type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "https://beefriendz-backend.onrender.com/api/tasks",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  project_id: $json.project_id,\n  task_name: $json.task_name,\n  created_by: $json.created_by,\n  ...(($json.assigned_to && $json.assigned_to !== '[undefined]') ? { assigned_to: $json.assigned_to } : {}),\n  ...(($json.deadline && $json.deadline !== '[undefined]') ? { deadline: $json.deadline } : {}),\n  ...(($json.phase && $json.phase !== '[undefined]') ? { phase: $json.phase } : {}),\n  ...(($json.priority && $json.priority !== '[undefined]') ? { priority: $json.priority } : {}),\n  ...(($json.description && $json.description !== '[undefined]') ? { description: $json.description } : {})\n}) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "number",
+            "description": "รหัสโปรเจกต์ (required)"
+          },
+          "task_name": {
+            "type": "string",
+            "description": "ชื่องาน (required)"
+          },
+          "created_by": {
+            "type": "number",
+            "description": "รหัสผู้สร้าง user_id (required)"
+          },
+          "assigned_to": {
+            "type": "number",
+            "description": "รหัสผู้รับผิดชอบ user_id (optional)"
+          },
+          "deadline": {
+            "type": "string",
+            "description": "วันที่ครบกำหนด รูปแบบ YYYY-MM-DD (optional)"
+          },
+          "phase": {
+            "type": "string",
+            "description": "ชื่อเฟส (optional)"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "ระดับความสำคัญ: low, medium, high (optional, default: medium)"
+          },
+          "description": {
+            "type": "string",
+            "description": "รายละเอียดงาน (optional)"
+          }
+        },
+        "required": ["project_id", "task_name", "created_by"]
+      }
+    },
+    {
+      "name": "Update Task Status",
+      "description": "อัพเดทสถานะของงาน จะส่งการแจ้งเตือน LINE Flex Message อัตโนมัติเมื่อสถานะเปลี่ยน",
+      "node_type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://beefriendz-backend.onrender.com/api/tasks/{{ $json.task_id }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  status: $json.status,\n  updated_by: $json.updated_by\n}) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "number",
+            "description": "รหัสงาน (required)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["todo", "in_progress", "reviewing", "submitted", "completed"],
+            "description": "สถานะใหม่: todo, in_progress, reviewing, submitted, completed (required)"
+          },
+          "updated_by": {
+            "type": "number",
+            "description": "รหัสผู้อัพเดท user_id (required)"
+          }
+        },
+        "required": ["task_id", "status", "updated_by"]
+      }
+    },
+    {
+      "name": "Add Task Attachment",
+      "description": "แนบไฟล์หรือลิงก์เข้ากับงาน ใช้สำหรับส่งงานพร้อมลิงก์",
+      "node_type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://beefriendz-backend.onrender.com/api/tasks/{{ $json.task_id }}/attachments",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  file_url: $json.file_url,\n  uploaded_by: $json.uploaded_by,\n  ...(($json.file_name && $json.file_name !== '[undefined]') ? { file_name: $json.file_name } : {})\n}) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "number",
+            "description": "รหัสงาน (required)"
+          },
+          "file_url": {
+            "type": "string",
+            "description": "URL ของไฟล์หรือลิงก์ (required)"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "ชื่อไฟล์ (optional, ถ้าไม่ระบุจะใช้ชื่อจาก URL)"
+          },
+          "uploaded_by": {
+            "type": "number",
+            "description": "รหัสผู้อัพโหลด user_id (required)"
+          }
+        },
+        "required": ["task_id", "file_url", "uploaded_by"]
+      }
+    },
+    {
+      "name": "View Tasks",
+      "description": "ดูรายการงานทั้งหมดในโปรเจกต์ รวมถึงชื่องาน สถานะ ผู้รับผิดชอบ deadline เฟส",
+      "node_type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "=https://beefriendz-backend.onrender.com/api/tasks/project/{{ $json.project_id }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "number",
+            "description": "รหัสโปรเจกต์ (required)"
+          }
+        },
+        "required": ["project_id"]
+      }
+    },
+    {
+      "name": "Add Phase",
+      "description": "เพิ่มเฟสใหม่เข้าในโปรเจกต์ จะเพิ่มเข้าไปใน phases array",
+      "node_type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://beefriendz-backend.onrender.com/api/projects/{{ $json.project_id }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  phases: $json.phases\n}) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "type": "number",
+            "description": "รหัสโปรเจกต์ (required)"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "อาร์เรย์ของเฟสทั้งหมด รวมถึงเฟสเก่าและเฟสใหม่ (required)"
+          }
+        },
+        "required": ["project_id", "phases"]
+      }
+    }
+  ],
+  "system_prompt_addition": {
+    "role": "คุณคือผู้ช่วยจัดการโปรเจกต์ BeeFriendz ที่สามารถสร้างงาน อัพเดทสถานะ เพิ่มเฟส และแนบไฟล์ผ่านการสนทนา",
+    "instructions": [
+      "ตอบเป็นภาษาไทยเท่านั้น ใช้น้ำเสียงเป็นกันเอง ไม่ต้องใช้ markdown asterisks",
+      "ใช้อิโมจิให้เหมาะสม เช่น ✅ เมื่อสำเร็จ ⚠️ เมื่อเตือน 📝 เมื่อสร้างงาน",
+      "ถามข้อมูลที่ขาดทีละอย่าง ไม่ต้องถามทุกอย่างพร้อมกัน",
+      "เมื่อผู้ใช้บอกชื่อคนในทีม ให้ใช้ View User tool หา user_id ก่อนทำงาน",
+      "ยืนยันกับผู้ใช้ก่อนทำการสร้างหรืออัพเดทข้อมูล",
+      "หลังจากสร้างงานหรืออัพเดทสำเร็จ แนะนำสิ่งที่ทำต่อได้"
+    ],
+    "status_mapping": {
+      "todo": "รอดำเนินการ",
+      "in_progress": "กำลังทำ",
+      "reviewing": "รอตรวจสอบ",
+      "submitted": "ส่งงานแล้ว",
+      "completed": "เสร็จสิ้น"
+    },
+    "priority_mapping": {
+      "low": "ต่ำ",
+      "medium": "ปานกลาง",
+      "high": "สูง"
+    },
+    "conversation_examples": [
+      {
+        "scenario": "สร้างงานใหม่",
+        "user": "เพิ่มงานออกแบบ UI deadline 30 พฤศจิกายน",
+        "bot_steps": [
+          "1. ใช้ View Project เพื่อหาโปรเจกต์ที่ผู้ใช้อยู่",
+          "2. ถามว่ามอบหมายให้ใคร (ถ้าไม่ได้บอก)",
+          "3. แปลงวันที่เป็น YYYY-MM-DD (2024-11-30)",
+          "4. ใช้ View User หา user_id ของผู้รับผิดชอบ",
+          "5. ยืนยันข้อมูล: ชื่องาน, ผู้รับผิดชอบ, deadline",
+          "6. เรียก Add Task tool",
+          "7. แจ้งผลสำเร็จพร้อมแนะนำการดำเนินการต่อ"
+        ]
+      },
+      {
+        "scenario": "อัพเดทสถานะ",
+        "user": "เปลี่ยนสถานะงานออกแบบ UI เป็นกำลังทำ",
+        "bot_steps": [
+          "1. ใช้ View Tasks หางานที่มีชื่อตรงกัน",
+          "2. แปลง 'กำลังทำ' เป็น 'in_progress'",
+          "3. ยืนยันว่าจะเปลี่ยนสถานะงานนี้",
+          "4. เรียก Update Task Status tool",
+          "5. แจ้งว่าระบบจะส่ง LINE notification อัตโนมัติ"
+        ]
+      },
+      {
+        "scenario": "ส่งงานพร้อมลิงก์",
+        "user": "ส่งงานออกแบบ UI https://figma.com/xxx",
+        "bot_steps": [
+          "1. ใช้ View Tasks หางาน",
+          "2. เรียก Add Task Attachment (file_url, file_name='ไฟล์งาน')",
+          "3. เรียก Update Task Status (status='submitted')",
+          "4. แจ้งว่าส่งงานสำเร็จและหัวหน้าจะได้รับการแจ้งเตือน"
+        ]
+      },
+      {
+        "scenario": "เพิ่มเฟส",
+        "user": "เพิ่มเฟสการทดสอบ",
+        "bot_steps": [
+          "1. ใช้ View Project หาโปรเจกต์และ phases ปัจจุบัน",
+          "2. สร้าง array ใหม่โดยรวมเฟสเก่า + เฟสใหม่",
+          "3. ยืนยันการเพิ่มเฟส",
+          "4. เรียก Add Phase tool",
+          "5. แจ้งว่าตอนนี้สามารถสร้างงานในเฟสนี้ได้แล้ว"
+        ]
+      }
+    ],
+    "error_handling": [
+      "ถ้าหาโปรเจกต์ไม่เจอ → แจ้งว่าไม่มีโปรเจกต์ active และแนะนำให้สร้างใหม่",
+      "ถ้าหา user ไม่เจอ → ถามชื่อใหม่หรือแนะนำให้เพิ่มสมาชิก",
+      "ถ้าหางานไม่เจอ → แจ้งรายการงานที่มีในโปรเจกต์ให้เลือก",
+      "ถ้า API error → แจ้งว่ามีปัญหาและแนะนำให้ลองใหม่ภายหลัง",
+      "ถ้าวันที่ไม่ถูกต้อง → ถามใหม่โดยขอรูปแบบ 'วัน เดือน ปี' หรือ 'DD/MM/YYYY'"
+    ],
+    "validation_rules": [
+      "deadline: ต้องเป็นวันในอนาคต แปลงจากภาษาไทยเป็น YYYY-MM-DD",
+      "status: ตรวจสอบว่าตรงกับ enum (todo, in_progress, reviewing, submitted, completed)",
+      "priority: ตรวจสอบว่าตรงกับ enum (low, medium, high)",
+      "user_id: ต้องหาจากฐานข้อมูลก่อน ไม่ใช่แค่เดา",
+      "project_id: ต้องมีอยู่จริงในกลุ่มนั้น",
+      "file_url: ต้องขึ้นต้นด้วย http:// หรือ https://"
+    ]
+  },
+  "usage_notes": {
+    "how_to_import": [
+      "1. เปิด n8n workflow ที่มี AI Agent อยู่แล้ว",
+      "2. สำหรับแต่ละ tool ใน array 'tools' ด้านบน:",
+      "   - เพิ่ม node ใหม่ประเภท 'HTTP Request'",
+      "   - คัดลอก parameters จาก JSON ไปใส่ใน node",
+      "   - ตั้งชื่อ node ตาม 'name' field",
+      "   - ใส่ description ตาม 'description' field",
+      "3. เชื่อมแต่ละ HTTP Request node เข้ากับ AI Agent node",
+      "4. คัดลอก 'system_prompt_addition' ไปเพิ่มใน system message ของ Gemini Chat Model",
+      "5. ทดสอบโดยส่งข้อความในไลน์"
+    ],
+    "testing_checklist": [
+      "✅ ทดสอบสร้างงาน: 'เพิ่มงานทดสอบ deadline พรุ่งนี้'",
+      "✅ ทดสอบอัพเดทสถานะ: 'เปลี่ยนสถานะงานทดสอบเป็นกำลังทำ'",
+      "✅ ทดสอบส่งงาน: 'ส่งงานทดสอบ https://example.com/file'",
+      "✅ ทดสอบเพิ่มเฟส: 'เพิ่มเฟสการทดสอบระบบ'",
+      "✅ ทดสอบดูงาน: 'แสดงรายการงานทั้งหมด'",
+      "✅ ตรวจสอบว่า LINE Flex notification ส่งเมื่อเปลี่ยนสถานะ"
+    ],
+    "important_notes": [
+      "⚠️ ต้องใช้ View User tool ก่อนเพื่อแปลงชื่อเป็น user_id",
+      "⚠️ เมื่อเพิ่มเฟส ต้องส่ง phases array ทั้งหมด ไม่ใช่แค่เฟสใหม่",
+      "⚠️ deadline ต้องเป็น YYYY-MM-DD format",
+      "⚠️ status และ priority ต้องเป็น English enum ตามที่กำหนด",
+      "⚠️ Update Task Status จะส่ง LINE Flex Message อัตโนมัติ",
+      "⚠️ timeout ตั้งไว้ 60 วินาที เพราะ Render มี cold start",
+      "⚠️ ต้องมี View Project และ View User tools ที่ทำงานได้แล้ว"
+    ]
+  }
+}

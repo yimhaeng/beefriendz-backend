@@ -144,21 +144,22 @@ router.put('/:id', async (req, res) => {
   if (result.success) {
     // ถ้ามีการเปลี่ยนสถานะ ส่งแจ้งเตือนไปกลุ่ม LINE
     if (oldStatus && req.body.status && oldStatus !== req.body.status) {
-      console.log('[PUT /api/tasks/:id] Status changed from', oldStatus, 'to', req.body.status);
+      const notificationKey = `task_${id}_${oldStatus}_to_${req.body.status}_${Date.now()}`;
+      console.log(`[PUT /api/tasks/:id] Status changed from ${oldStatus} to ${req.body.status} [${notificationKey}]`);
       
       // ส่ง LINE notification แบบ async (ไม่รอ)
-      (async () => {
+      // รอ 500ms เพื่อป้องกันการส่งซ้ำถ้า API ถูกเรียกซ้ำเร็วๆ
+      setTimeout(async () => {
         try {
-          console.log('[LINE NOTIFICATION] Starting...');
+          console.log(`[LINE NOTIFICATION ${notificationKey}] Starting...`);
           
           // ดึงข้อมูลงานพร้อม project และ group
           const taskWithDetails = await projectController.getTaskById(id);
-          console.log('[LINE NOTIFICATION] Task details fetched:', !!taskWithDetails.success);
+          console.log(`[LINE NOTIFICATION ${notificationKey}] Task details fetched:`, !!taskWithDetails.success);
           
           if (taskWithDetails.success && taskWithDetails.data.project) {
             const task = taskWithDetails.data;
-            console.log('[LINE NOTIFICATION] Task name:', task.task_name);
-            console.log('[LINE NOTIFICATION] Project:', task.project);
+            console.log(`[LINE NOTIFICATION ${notificationKey}] Task:`, task.task_name);
             
             // ดึงข้อมูล user ที่อัปเดต
             const supabase = require('../config/supabase');
@@ -170,7 +171,7 @@ router.put('/:id', async (req, res) => {
                 .eq('user_id', req.body.updated_by)
                 .single();
               updatedByUser = userData;
-              console.log('[LINE NOTIFICATION] Updated by:', updatedByUser?.display_name);
+              console.log(`[LINE NOTIFICATION ${notificationKey}] Updated by:`, updatedByUser?.display_name);
             }
             
             // ดึง line_group_id จาก project
@@ -181,15 +182,13 @@ router.put('/:id', async (req, res) => {
               .single();
             
             if (projectError) {
-              console.error('[LINE NOTIFICATION] Error fetching project data:', projectError);
+              console.error(`[LINE NOTIFICATION ${notificationKey}] Error:`, projectError);
               return;
             }
             
-            console.log('[LINE NOTIFICATION] Project data:', JSON.stringify(projectData));
-            console.log('[LINE NOTIFICATION] LINE Group ID:', projectData?.groups?.line_group_id);
+            console.log(`[LINE NOTIFICATION ${notificationKey}] LINE Group:`, projectData?.groups?.line_group_id);
             
             if (projectData?.groups?.line_group_id) {
-              console.log('[LINE NOTIFICATION] Sending message...');
               const lineResult = await lineController.sendTaskStatusUpdateMessage(
                 projectData.groups.line_group_id,
                 {
@@ -201,18 +200,15 @@ router.put('/:id', async (req, res) => {
                   project: task.project
                 }
               );
-              console.log('[LINE NOTIFICATION] Result:', lineResult);
+              console.log(`[LINE NOTIFICATION ${notificationKey}] ✅ Sent:`, lineResult.success);
             } else {
-              console.log('[LINE NOTIFICATION] No LINE group ID found in project data');
+              console.log(`[LINE NOTIFICATION ${notificationKey}] ❌ No LINE group ID`);
             }
-          } else {
-            console.log('[LINE NOTIFICATION] No project data in task');
           }
         } catch (err) {
-          console.error('[LINE NOTIFICATION] Error:', err);
-          console.error('[LINE NOTIFICATION] Error stack:', err.stack);
+          console.error(`[LINE NOTIFICATION ${notificationKey}] Error:`, err.message);
         }
-      })();
+      }, 500);
     }
     
     res.json(result.data);
