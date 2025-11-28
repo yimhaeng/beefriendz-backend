@@ -86,6 +86,7 @@ router.put('/:id', async (req, res) => {
   if (result.success) {
     // ถ้ามีการเปลี่ยนสถานะ ส่งแจ้งเตือนไปกลุ่ม LINE
     if (oldStatus && req.body.status && oldStatus !== req.body.status) {
+      console.log('[PUT /api/tasks/:id] Status changed from', oldStatus, 'to', req.body.status);
       try {
         // ดึงข้อมูลงานพร้อม project และ group
         const taskWithDetails = await projectController.getTaskById(id);
@@ -112,8 +113,11 @@ router.put('/:id', async (req, res) => {
             .eq('project_id', task.project.project_id)
             .single();
           
+          console.log('[PUT /api/tasks/:id] Project data:', projectData);
+          console.log('[PUT /api/tasks/:id] LINE Group ID:', projectData?.groups?.line_group_id);
+          
           if (projectData?.groups?.line_group_id) {
-            await lineController.sendTaskStatusUpdateMessage(
+            const lineResult = await lineController.sendTaskStatusUpdateMessage(
               projectData.groups.line_group_id,
               {
                 task_name: task.task_name,
@@ -124,6 +128,9 @@ router.put('/:id', async (req, res) => {
                 project: task.project
               }
             );
+            console.log('[PUT /api/tasks/:id] LINE notification result:', lineResult);
+          } else {
+            console.log('[PUT /api/tasks/:id] No LINE group ID found');
           }
         }
       } catch (err) {
