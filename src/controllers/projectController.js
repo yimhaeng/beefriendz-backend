@@ -239,9 +239,14 @@ async function updateTask(taskId, taskData) {
       } else {
         console.log('[updateTask] Activity log created:', logResult);
       }
+
+      // ตรวจสอบว่างานทั้งหมดเสร็จสิ้นหรือยัง (เมื่อเปลี่ยนเป็น completed)
+      if (taskData.status === 'completed') {
+        await checkAndUpdateProjectCompletion(oldTask.project_id);
+      }
     }
 
-    return { success: true, data: Array.isArray(data) ? data[0] : data };
+    return { success: true, data: Array.isArray(data) ? data[0] : data, project_id: oldTask.project_id };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -463,6 +468,65 @@ async function deleteComment(commentId) {
   }
 }
 
+// ตรวจสอบและอัพเดทสถานะโปรเจกต์เมื่องานทั้งหมดเสร็จสิ้น
+async function checkAndUpdateProjectCompletion(projectId) {
+  try {
+    console.log(`[checkProjectCompletion] Checking project ${projectId}`);
+
+    // ดึงงานทั้งหมดในโปรเจกต์
+    const { data: tasks, error: tasksError } = await supabase
+      .from('project_tasks')
+      .select('task_id, status')
+      .eq('project_id', projectId);
+
+    if (tasksError) throw tasksError;
+
+    // ตรวจสอบว่ามีงานหรือไม่
+    if (!tasks || tasks.length === 0) {
+      console.log(`[checkProjectCompletion] No tasks in project ${projectId}`);
+      return { success: false, message: 'No tasks in project' };
+    }
+
+    // ตรวจสอบว่างานทั้งหมดเสร็จสิ้นหรือยัง
+    const allCompleted = tasks.every(task => task.status === 'completed');
+    console.log(`[checkProjectCompletion] All tasks completed: ${allCompleted} (${tasks.filter(t => t.status === 'completed').length}/${tasks.length})`);
+
+    if (allCompleted) {
+      // อัพเดทสถานะโปรเจกต์เป็น achieved
+      const { data: project, error: updateError } = await supabase
+        .from('projects')
+        .update({ status: 'achieved' })
+        .eq('project_id', projectId)
+        .select('*, groups(line_group_id)')
+        .single();
+
+      if (updateError) throw updateError;
+
+      console.log(`[checkProjectCompletion] ✅ Project ${projectId} marked as ACHIEVED!`);
+
+      // ส่ง LINE notification
+      if (project?.groups?.line_group_id) {
+        const lineController = require('./lineController');
+        await lineController.sendProjectCompletedMessage(
+          project.groups.line_group_id,
+          {
+            project_id: project.project_id,
+            project_name: project.project_name,
+            total_tasks: tasks.length
+          }
+        );
+      }
+
+      return { success: true, achieved: true };
+    }
+
+    return { success: true, achieved: false };
+  } catch (error) {
+    console.error('[checkProjectCompletion] Error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   // Projects
   getProjectsByGroup,
@@ -494,4 +558,7 @@ module.exports = {
   createComment,
   updateComment,
   deleteComment,
+
+  // Project Completion
+  checkAndUpdateProjectCompletion,
 };

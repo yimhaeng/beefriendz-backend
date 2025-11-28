@@ -549,8 +549,217 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
   }
 }
 
+/**
+ * ส่ง Flex Message แสดงความยินดีเมื่อโปรเจกต์เสร็จสมบูรณ์
+ */
+async function sendProjectCompletedMessage(lineGroupId, projectData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const projectUrl = `${liffUrl}/projectdetail/${projectData.project_id}`;
+
+    console.log('[LINE] Sending project completion message to group:', lineGroupId);
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `🎊 ยินดีด้วย! โปรเจกต์ "${projectData.project_name}" เสร็จสมบูรณ์แล้ว!`,
+      contents: {
+        type: 'bubble',
+        size: 'giga',
+        hero: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '🎊',
+              size: '5xl',
+              align: 'center',
+              margin: 'md'
+            },
+            {
+              type: 'text',
+              text: 'ยินดีด้วย!',
+              weight: 'bold',
+              size: 'xxl',
+              align: 'center',
+              color: '#FFFFFF',
+              margin: 'md'
+            },
+            {
+              type: 'text',
+              text: 'โปรเจกต์สำเร็จ',
+              size: 'md',
+              align: 'center',
+              color: '#FFFFFF',
+              margin: 'sm'
+            }
+          ],
+          backgroundColor: '#17C964',
+          paddingAll: '30px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: projectData.project_name,
+              weight: 'bold',
+              size: 'xl',
+              wrap: true,
+              align: 'center',
+              color: '#17C964'
+            },
+            {
+              type: 'separator',
+              margin: 'xl'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'xl',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '✅',
+                      size: 'xl',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: 'งานทั้งหมดเสร็จสมบูรณ์',
+                      size: 'md',
+                      color: '#555555',
+                      flex: 1,
+                      margin: 'md'
+                    }
+                  ]
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📊',
+                      size: 'xl',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: `รวม ${projectData.total_tasks} งาน`,
+                      size: 'md',
+                      color: '#555555',
+                      flex: 1,
+                      margin: 'md'
+                    }
+                  ],
+                  margin: 'md'
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '🏆',
+                      size: 'xl',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: 'สถานะ: บรรลุเป้าหมาย',
+                      size: 'md',
+                      color: '#17C964',
+                      weight: 'bold',
+                      flex: 1,
+                      margin: 'md'
+                    }
+                  ],
+                  margin: 'md'
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              contents: [
+                {
+                  type: 'text',
+                  text: '🎉 ขอแสดงความยินดีกับทุกคนที่ร่วมงานกันค่ะ!',
+                  wrap: true,
+                  color: '#8B8B8B',
+                  size: 'sm',
+                  align: 'center'
+                }
+              ],
+              margin: 'xl',
+              paddingAll: '10px',
+              backgroundColor: '#F7F7F7',
+              cornerRadius: '10px'
+            }
+          ],
+          paddingAll: '20px'
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: 'ดูรายละเอียดโปรเจกต์',
+                uri: projectUrl
+              },
+              color: '#17C964'
+            }
+          ],
+          flex: 0
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] ✅ Project completion message sent successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending project completion message:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
   sendTaskStatusUpdateMessage,
-  sendDeadlineReminder
+  sendDeadlineReminder,
+  sendProjectCompletedMessage
 };

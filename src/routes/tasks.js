@@ -201,6 +201,15 @@ router.put('/:id', async (req, res) => {
                 }
               );
               console.log(`[LINE NOTIFICATION ${notificationKey}] ✅ Sent:`, lineResult.success);
+
+              // ตรวจสอบว่าโปรเจกต์สำเร็จหรือยัง (เมื่อเปลี่ยนเป็น completed)
+              if (req.body.status === 'completed') {
+                console.log(`[LINE NOTIFICATION ${notificationKey}] Checking project completion...`);
+                const completionResult = await projectController.checkAndUpdateProjectCompletion(task.project.project_id);
+                if (completionResult.achieved) {
+                  console.log(`[LINE NOTIFICATION ${notificationKey}] 🎊 PROJECT ACHIEVED!`);
+                }
+              }
             } else {
               console.log(`[LINE NOTIFICATION ${notificationKey}] ❌ No LINE group ID`);
             }
