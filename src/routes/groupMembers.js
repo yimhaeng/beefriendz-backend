@@ -49,6 +49,15 @@ router.put('/:id', async (req, res) => {
   else res.status(400).json({ error: result.error });
 });
 
+// PUT /api/group-members/:groupId/:userId - update member role by groupId and userId
+router.put('/:groupId/:userId', async (req, res) => {
+  const { groupId, userId } = req.params;
+  const { role } = req.body;
+  const result = await gmController.updateMemberRole(groupId, userId, role);
+  if (result.success) res.json(result.data);
+  else res.status(400).json({ error: result.error });
+});
+
 // DELETE /api/group-members/:id - remove member
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;

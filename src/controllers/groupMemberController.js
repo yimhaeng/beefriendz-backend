@@ -95,6 +95,23 @@ async function updateMember(memberId, role) {
   }
 }
 
+// อัปเดต role สมาชิกด้วย groupId และ userId
+async function updateMemberRole(groupId, userId, role) {
+  try {
+    const { data, error } = await supabase
+      .from('group_members')
+      .update({ role })
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+      .select('*, users(user_id, display_name, picture_url)');
+
+    if (error) throw error;
+    return { success: true, data: Array.isArray(data) ? data[0] : data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 // ลบสมาชิกจากกลุ่ม
 async function removeMember(memberId) {
   try {
@@ -137,5 +154,6 @@ module.exports = {
   checkMembership,
   addMember,
   updateMember,
+  updateMemberRole,
   removeMember,
 };
