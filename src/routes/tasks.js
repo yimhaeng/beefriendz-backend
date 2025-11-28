@@ -87,56 +87,74 @@ router.put('/:id', async (req, res) => {
     // ถ้ามีการเปลี่ยนสถานะ ส่งแจ้งเตือนไปกลุ่ม LINE
     if (oldStatus && req.body.status && oldStatus !== req.body.status) {
       console.log('[PUT /api/tasks/:id] Status changed from', oldStatus, 'to', req.body.status);
-      try {
-        // ดึงข้อมูลงานพร้อม project และ group
-        const taskWithDetails = await projectController.getTaskById(id);
-        
-        if (taskWithDetails.success && taskWithDetails.data.project) {
-          const task = taskWithDetails.data;
+      
+      // ส่ง LINE notification แบบ async (ไม่รอ)
+      (async () => {
+        try {
+          console.log('[LINE NOTIFICATION] Starting...');
           
-          // ดึงข้อมูล user ที่อัปเดต
-          const supabase = require('../config/supabase');
-          let updatedByUser = null;
-          if (req.body.updated_by) {
-            const { data: userData } = await supabase
-              .from('users')
-              .select('user_id, display_name')
-              .eq('user_id', req.body.updated_by)
+          // ดึงข้อมูลงานพร้อม project และ group
+          const taskWithDetails = await projectController.getTaskById(id);
+          console.log('[LINE NOTIFICATION] Task details fetched:', !!taskWithDetails.success);
+          
+          if (taskWithDetails.success && taskWithDetails.data.project) {
+            const task = taskWithDetails.data;
+            console.log('[LINE NOTIFICATION] Task name:', task.task_name);
+            console.log('[LINE NOTIFICATION] Project:', task.project);
+            
+            // ดึงข้อมูล user ที่อัปเดต
+            const supabase = require('../config/supabase');
+            let updatedByUser = null;
+            if (req.body.updated_by) {
+              const { data: userData } = await supabase
+                .from('users')
+                .select('user_id, display_name')
+                .eq('user_id', req.body.updated_by)
+                .single();
+              updatedByUser = userData;
+              console.log('[LINE NOTIFICATION] Updated by:', updatedByUser?.display_name);
+            }
+            
+            // ดึง line_group_id จาก project
+            const { data: projectData, error: projectError } = await supabase
+              .from('projects')
+              .select('group_id, groups(line_group_id)')
+              .eq('project_id', task.project.project_id)
               .single();
-            updatedByUser = userData;
-          }
-          
-          // ดึง line_group_id จาก project
-          const { data: projectData } = await supabase
-            .from('projects')
-            .select('group_id, groups(line_group_id)')
-            .eq('project_id', task.project.project_id)
-            .single();
-          
-          console.log('[PUT /api/tasks/:id] Project data:', projectData);
-          console.log('[PUT /api/tasks/:id] LINE Group ID:', projectData?.groups?.line_group_id);
-          
-          if (projectData?.groups?.line_group_id) {
-            const lineResult = await lineController.sendTaskStatusUpdateMessage(
-              projectData.groups.line_group_id,
-              {
-                task_name: task.task_name,
-                status: req.body.status,
-                old_status: oldStatus,
-                assigned_user: task.assigned_user,
-                updated_by_user: updatedByUser,
-                project: task.project
-              }
-            );
-            console.log('[PUT /api/tasks/:id] LINE notification result:', lineResult);
+            
+            if (projectError) {
+              console.error('[LINE NOTIFICATION] Error fetching project data:', projectError);
+              return;
+            }
+            
+            console.log('[LINE NOTIFICATION] Project data:', JSON.stringify(projectData));
+            console.log('[LINE NOTIFICATION] LINE Group ID:', projectData?.groups?.line_group_id);
+            
+            if (projectData?.groups?.line_group_id) {
+              console.log('[LINE NOTIFICATION] Sending message...');
+              const lineResult = await lineController.sendTaskStatusUpdateMessage(
+                projectData.groups.line_group_id,
+                {
+                  task_name: task.task_name,
+                  status: req.body.status,
+                  old_status: oldStatus,
+                  assigned_user: task.assigned_user,
+                  updated_by_user: updatedByUser,
+                  project: task.project
+                }
+              );
+              console.log('[LINE NOTIFICATION] Result:', lineResult);
+            } else {
+              console.log('[LINE NOTIFICATION] No LINE group ID found in project data');
+            }
           } else {
-            console.log('[PUT /api/tasks/:id] No LINE group ID found');
+            console.log('[LINE NOTIFICATION] No project data in task');
           }
+        } catch (err) {
+          console.error('[LINE NOTIFICATION] Error:', err);
+          console.error('[LINE NOTIFICATION] Error stack:', err.stack);
         }
-      } catch (err) {
-        console.error('[PUT /api/tasks/:id] Error sending LINE notification:', err);
-        // ไม่ throw error เพื่อให้การอัปเดตงานสำเร็จต่อไป
-      }
+      })();
     }
     
     res.json(result.data);
