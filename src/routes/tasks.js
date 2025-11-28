@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const projectController = require('../controllers/projectController');
+const lineController = require('../controllers/lineController');
 
 // ========== TASK ROUTES ==========
 
@@ -76,9 +77,61 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   
+  // Get old task data before update (for comparison)
+  const oldTaskResult = await projectController.getTaskById(id);
+  const oldStatus = oldTaskResult.success ? oldTaskResult.data.status : null;
+  
   const result = await projectController.updateTask(id, req.body);
   
   if (result.success) {
+    // ถ้ามีการเปลี่ยนสถานะ ส่งแจ้งเตือนไปกลุ่ม LINE
+    if (oldStatus && req.body.status && oldStatus !== req.body.status) {
+      try {
+        // ดึงข้อมูลงานพร้อม project และ group
+        const taskWithDetails = await projectController.getTaskById(id);
+        
+        if (taskWithDetails.success && taskWithDetails.data.project) {
+          const task = taskWithDetails.data;
+          
+          // ดึงข้อมูล user ที่อัปเดต
+          const supabase = require('../config/supabase');
+          let updatedByUser = null;
+          if (req.body.updated_by) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('user_id, display_name')
+              .eq('user_id', req.body.updated_by)
+              .single();
+            updatedByUser = userData;
+          }
+          
+          // ดึง line_group_id จาก project
+          const { data: projectData } = await supabase
+            .from('projects')
+            .select('group_id, groups(line_group_id)')
+            .eq('project_id', task.project.project_id)
+            .single();
+          
+          if (projectData?.groups?.line_group_id) {
+            await lineController.sendTaskStatusUpdateMessage(
+              projectData.groups.line_group_id,
+              {
+                task_name: task.task_name,
+                status: req.body.status,
+                old_status: oldStatus,
+                assigned_user: task.assigned_user,
+                updated_by_user: updatedByUser,
+                project: task.project
+              }
+            );
+          }
+        }
+      } catch (err) {
+        console.error('[PUT /api/tasks/:id] Error sending LINE notification:', err);
+        // ไม่ throw error เพื่อให้การอัปเดตงานสำเร็จต่อไป
+      }
+    }
+    
     res.json(result.data);
   } else {
     res.status(400).json({ error: result.error });
