@@ -159,6 +159,7 @@ async function getTaskById(taskId) {
       .from('project_tasks')
       .select(`
         *,
+        project:projects(project_id, project_name, group_id),
         assigned_user:users!project_tasks_assigned_to_fkey(user_id, display_name, picture_url),
         created_by_user:users!project_tasks_created_by_fkey(user_id, display_name, picture_url),
         attachments:task_attachments(*),
