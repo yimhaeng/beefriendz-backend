@@ -323,7 +323,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               style: 'primary',
               action: {
                 type: 'uri',
-                label: '📋 ดูโปรเจกต์',
+                label: 'ดูโปรเจกต์',
                 uri: projectUrl
               },
               color: newStatusInfo.color,
