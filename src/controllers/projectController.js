@@ -9,7 +9,8 @@ async function getProjectsByGroup(groupId) {
       .from('projects')
       .select(`
         *,
-        created_by_user:users!projects_created_by_fkey(user_id, display_name, picture_url)
+        created_by_user:users!projects_created_by_fkey(user_id, display_name, picture_url),
+        groups!projects_group_id_fkey(group_id, line_group_id)
       `)
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
@@ -21,6 +22,24 @@ async function getProjectsByGroup(groupId) {
       ...project,
       phases: project.phases ? JSON.parse(project.phases) : null
     }));
+    
+    // ซิงค์สมาชิก LINE โดยอัตโนมัติ (เรียกเมื่อโหลดโปรเจกต์ทั้งหมด)
+    if (data.length > 0 && data[0]?.groups?.line_group_id) {
+      console.log(`[projectController] Auto-syncing LINE members for group ${groupId}`);
+      const lineController = require('./lineController');
+      
+      lineController.syncLineGroupMembers(groupId, data[0].groups.line_group_id)
+        .then(result => {
+          if (result.success) {
+            console.log(`[projectController] Sync completed: ${result.synced}/${result.total} members`);
+          } else {
+            console.warn(`[projectController] Sync failed: ${result.error}`);
+          }
+        })
+        .catch(err => {
+          console.error(`[projectController] Sync error:`, err);
+        });
+    }
     
     return { success: true, data: parsedData };
   } catch (error) {
@@ -35,7 +54,8 @@ async function getProjectById(projectId) {
       .from('projects')
       .select(`
         *,
-        created_by_user:users!projects_created_by_fkey(user_id, display_name, picture_url)
+        created_by_user:users!projects_created_by_fkey(user_id, display_name, picture_url),
+        groups!projects_group_id_fkey(group_id, line_group_id)
       `)
       .eq('project_id', projectId)
       .single();
@@ -45,6 +65,24 @@ async function getProjectById(projectId) {
     // Parse phases from JSON string to array
     if (data && data.phases) {
       data.phases = JSON.parse(data.phases);
+    }
+    
+    // ซิงค์สมาชิก LINE โดยอัตโนมัติ
+    if (data?.groups?.line_group_id && data?.group_id) {
+      console.log(`[projectController] Auto-syncing LINE members for project ${projectId}`);
+      const lineController = require('./lineController');
+      
+      lineController.syncLineGroupMembers(data.group_id, data.groups.line_group_id)
+        .then(result => {
+          if (result.success) {
+            console.log(`[projectController] Sync completed: ${result.synced}/${result.total} members`);
+          } else {
+            console.warn(`[projectController] Sync failed: ${result.error}`);
+          }
+        })
+        .catch(err => {
+          console.error(`[projectController] Sync error:`, err);
+        });
     }
     
     return { success: true, data };

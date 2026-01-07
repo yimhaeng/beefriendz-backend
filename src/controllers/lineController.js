@@ -757,9 +757,289 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
   }
 }
 
+/**
+ * ดึงรายชื่อ User IDs ของสมาชิกทั้งหมดในกลุ่ม LINE
+ * @param {string} lineGroupId - LINE Group ID
+ * @returns {Promise<{success: boolean, data?: string[], error?: string}>}
+ */
+async function getGroupMemberIds(lineGroupId) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const response = await axios.get(
+      `https://api.line.me/v2/bot/group/${lineGroupId}/members/ids`,
+      {
+        headers: {
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log(`[LINE] Retrieved ${response.data.memberIds?.length || 0} member IDs from group ${lineGroupId}`);
+    return { success: true, data: response.data.memberIds || [] };
+  } catch (error) {
+    console.error('[LINE] Error getting group member IDs:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+}
+
+/**
+ * ดึงข้อมูลโปรไฟล์ของสมาชิกคนหนึ่งในกลุ่ม LINE
+ * @param {string} lineGroupId - LINE Group ID
+ * @param {string} userId - LINE User ID
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+async function getGroupMemberProfile(lineGroupId, userId) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const response = await axios.get(
+      `https://api.line.me/v2/bot/group/${lineGroupId}/member/${userId}/profile`,
+      {
+        headers: {
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log(`[LINE] Retrieved profile for user ${userId} in group ${lineGroupId}`);
+    return { 
+      success: true, 
+      data: {
+        displayName: response.data.displayName,
+        userId: response.data.userId,
+        pictureUrl: response.data.pictureUrl,
+        statusMessage: response.data.statusMessage
+      }
+    };
+  } catch (error) {
+    console.error(`[LINE] Error getting profile for user ${userId}:`, error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+}
+
+/**
+ * ดึงข้อมูลโปรไฟล์ทั้งหมดของสมาชิกในกลุ่ม LINE
+ * @param {string} lineGroupId - LINE Group ID
+ * @returns {Promise<{success: boolean, data?: array, error?: string}>}
+ */
+async function getAllGroupMemberProfiles(lineGroupId) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    // ขั้นที่ 1: ดึงรายชื่อ User IDs ทั้งหมด
+    const memberIdsResult = await getGroupMemberIds(lineGroupId);
+    if (!memberIdsResult.success || !memberIdsResult.data || memberIdsResult.data.length === 0) {
+      return { 
+        success: false, 
+        error: memberIdsResult.error || 'No members found in group' 
+      };
+    }
+
+    const memberIds = memberIdsResult.data;
+    console.log(`[LINE] Fetching profiles for ${memberIds.length} members...`);
+
+    // ขั้นที่ 2: ดึงโปรไฟล์ของแต่ละคน (พร้อมกัน)
+    const profilePromises = memberIds.map(userId =>
+      getGroupMemberProfile(lineGroupId, userId)
+    );
+
+    const profiles = await Promise.all(profilePromises);
+
+    // ขั้นที่ 3: ประมวลผลผลลัพธ์
+    const successProfiles = profiles
+      .filter(result => result.success)
+      .map(result => result.data);
+
+    const failedProfiles = profiles.filter(result => !result.success);
+
+    console.log(`[LINE] Successfully retrieved ${successProfiles.length}/${memberIds.length} member profiles`);
+    
+    if (failedProfiles.length > 0) {
+      console.warn(`[LINE] Failed to retrieve ${failedProfiles.length} profiles`);
+    }
+
+    return {
+      success: true,
+      data: successProfiles,
+      total: memberIds.length,
+      retrieved: successProfiles.length,
+      failed: failedProfiles.length
+    };
+  } catch (error) {
+    console.error('[LINE] Error getting all group member profiles:', error.message);
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+}
+
+/**
+ * ซิงค์สมาชิก LINE เข้าฐานข้อมูล (จาก LINE API เข้า Supabase)
+ * @param {number} groupId - Group ID ในฐานข้อมูล
+ * @param {string} lineGroupId - LINE Group ID
+ * @returns {Promise<{success: boolean, synced?: number, error?: string}>}
+ */
+async function syncLineGroupMembers(groupId, lineGroupId) {
+  try {
+    console.log(`[LINE] Starting sync for group ${groupId} (LINE: ${lineGroupId})`);
+
+    // ขั้นที่ 1: ดึงสมาชิกจาก LINE API
+    const profilesResult = await getAllGroupMemberProfiles(lineGroupId);
+    if (!profilesResult.success || !profilesResult.data) {
+      return { 
+        success: false, 
+        error: profilesResult.error || 'Failed to fetch LINE members' 
+      };
+    }
+
+    const lineProfiles = profilesResult.data;
+    console.log(`[LINE] Got ${lineProfiles.length} profiles from LINE API`);
+
+    // ขั้นที่ 2: ซิงค์กับ Database
+    const supabase = require('../config/supabase');
+    let syncedCount = 0;
+    const errors = [];
+
+    for (const profile of lineProfiles) {
+      try {
+        // หรือหา user โดยใช้ line_user_id
+        const { data: existingUser, error: checkError } = await supabase
+          .from('users')
+          .select('user_id')
+          .eq('line_user_id', profile.userId)
+          .maybeSingle();
+
+        if (checkError) {
+          console.warn(`[LINE] Error checking user ${profile.userId}:`, checkError.message);
+          errors.push(`User check failed for ${profile.displayName}`);
+          continue;
+        }
+
+        let userId;
+
+        if (existingUser) {
+          // User มีอยู่แล้ว ปรับปรุง display_name และ picture_url
+          userId = existingUser.user_id;
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({
+              display_name: profile.displayName,
+              picture_url: profile.pictureUrl || null,
+              status_message: profile.statusMessage || null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+
+          if (updateError) {
+            console.warn(`[LINE] Error updating user ${userId}:`, updateError.message);
+            errors.push(`User update failed for ${profile.displayName}`);
+            continue;
+          }
+          console.log(`[LINE] Updated user ${userId}: ${profile.displayName}`);
+        } else {
+          // User ใหม่ สร้างเข้า Database
+          const { data: newUser, error: createError } = await supabase
+            .from('users')
+            .insert([{
+              line_user_id: profile.userId,
+              display_name: profile.displayName,
+              picture_url: profile.pictureUrl || null,
+              status_message: profile.statusMessage || null
+            }])
+            .select('user_id');
+
+          if (createError) {
+            console.warn(`[LINE] Error creating user ${profile.userId}:`, createError.message);
+            errors.push(`User creation failed for ${profile.displayName}`);
+            continue;
+          }
+
+          userId = newUser[0].user_id;
+          console.log(`[LINE] Created new user ${userId}: ${profile.displayName}`);
+        }
+
+        // เพิ่มสมาชิกเข้ากลุ่ม (ถ้ายังไม่เป็นสมาชิก)
+        const { data: existingMember, error: memberCheckError } = await supabase
+          .from('group_members')
+          .select('id')
+          .eq('group_id', groupId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (memberCheckError) {
+          console.warn(`[LINE] Error checking member:`, memberCheckError.message);
+          errors.push(`Member check failed for ${profile.displayName}`);
+          continue;
+        }
+
+        if (!existingMember) {
+          const { error: addError } = await supabase
+            .from('group_members')
+            .insert([{
+              group_id: groupId,
+              user_id: userId,
+              role: 'member',
+              joined_at: new Date().toISOString()
+            }]);
+
+          if (addError) {
+            console.warn(`[LINE] Error adding member:`, addError.message);
+            errors.push(`Member add failed for ${profile.displayName}`);
+            continue;
+          }
+          console.log(`[LINE] Added ${profile.displayName} to group ${groupId}`);
+        } else {
+          console.log(`[LINE] ${profile.displayName} already in group ${groupId}`);
+        }
+
+        syncedCount++;
+      } catch (err) {
+        console.error(`[LINE] Unexpected error syncing ${profile.displayName}:`, err);
+        errors.push(`Unexpected error for ${profile.displayName}`);
+      }
+    }
+
+    console.log(`[LINE] Sync completed: ${syncedCount}/${lineProfiles.length} members synced`);
+    if (errors.length > 0) {
+      console.warn(`[LINE] Errors during sync:`, errors);
+    }
+
+    return {
+      success: true,
+      synced: syncedCount,
+      total: lineProfiles.length,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  } catch (error) {
+    console.error('[LINE] Error syncing members:', error.message);
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
   sendTaskStatusUpdateMessage,
   sendDeadlineReminder,
-  sendProjectCompletedMessage
+  sendProjectCompletedMessage,
+  getGroupMemberIds,
+  getGroupMemberProfile,
+  getAllGroupMemberProfiles,
+  syncLineGroupMembers
 };

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const groupController = require('../controllers/groupController');
+const lineController = require('../controllers/lineController');
 
 // POST /api/groups/from-line - create or update group from LINE (for n8n)
 router.post('/from-line', async (req, res) => {
@@ -58,6 +59,71 @@ router.delete('/:id', async (req, res) => {
   const result = await groupController.deleteGroup(id);
   if (result.success) res.json({ message: result.message });
   else res.status(400).json({ error: result.error });
+});
+
+// ========================================
+// LINE Group Member Management
+// ========================================
+
+// GET /api/groups/line/:lineGroupId/members/ids - ดึงรายชื่อ User IDs ของสมาชิกกลุ่ม
+router.get('/line/:lineGroupId/members/ids', async (req, res) => {
+  const { lineGroupId } = req.params;
+  console.log('[Groups Route] Fetching member IDs for LINE group:', lineGroupId);
+  
+  const result = await lineController.getGroupMemberIds(lineGroupId);
+  if (result.success) {
+    res.json({ 
+      success: true,
+      memberIds: result.data,
+      count: result.data?.length || 0
+    });
+  } else {
+    res.status(400).json({ 
+      success: false,
+      error: result.error 
+    });
+  }
+});
+
+// GET /api/groups/line/:lineGroupId/members/profiles - ดึงโปรไฟล์ทั้งหมดของสมาชิกกลุ่ม
+router.get('/line/:lineGroupId/members/profiles', async (req, res) => {
+  const { lineGroupId } = req.params;
+  console.log('[Groups Route] Fetching all member profiles for LINE group:', lineGroupId);
+  
+  const result = await lineController.getAllGroupMemberProfiles(lineGroupId);
+  if (result.success) {
+    res.json({ 
+      success: true,
+      members: result.data,
+      total: result.total,
+      retrieved: result.retrieved,
+      failed: result.failed
+    });
+  } else {
+    res.status(400).json({ 
+      success: false,
+      error: result.error 
+    });
+  }
+});
+
+// GET /api/groups/line/:lineGroupId/member/:userId/profile - ดึงโปรไฟล์สมาชิกคนเดียว
+router.get('/line/:lineGroupId/member/:userId/profile', async (req, res) => {
+  const { lineGroupId, userId } = req.params;
+  console.log('[Groups Route] Fetching profile for user', userId, 'in LINE group:', lineGroupId);
+  
+  const result = await lineController.getGroupMemberProfile(lineGroupId, userId);
+  if (result.success) {
+    res.json({ 
+      success: true,
+      member: result.data
+    });
+  } else {
+    res.status(400).json({ 
+      success: false,
+      error: result.error 
+    });
+  }
 });
 
 module.exports = router;
