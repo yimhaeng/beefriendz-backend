@@ -967,8 +967,8 @@ module.exports = {
   sendTaskStatusUpdateMessage,
   sendDeadlineReminder,
   sendProjectCompletedMessage,
-  getGroupMemberIds,
-  getGroupMemberProfile,
+  // getGroupMemberIds,
+  // getGroupMemberProfile,
   getAllGroupMemberProfiles,
   syncLineGroupMembers
 };
