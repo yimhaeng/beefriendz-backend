@@ -33,10 +33,10 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               text: '🎉 โปรเจกต์ใหม่!',
               weight: 'bold',
               size: 'xl',
-              color: '#000000'
+              color: '#FFFFFF'
             }
           ],
-          backgroundColor: '#f8a720',
+          backgroundColor: '#FFA500',
           paddingAll: '20px'
         },
         body: {
@@ -54,7 +54,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               type: 'text',
               text: projectData.description,
               size: 'sm',
-              color: '#000000ff',
+              color: '#999999',
               margin: 'md',
               wrap: true
             }] : []),
@@ -125,7 +125,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                 label: '📋 ดูรายละเอียดโปรเจกต์',
                 uri: projectUrl
               },
-              color: '#f8a720'
+              color: '#FFA500'
             }
           ]
         }
@@ -171,10 +171,10 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     // สร้าง status emoji และข้อความ
     const statusConfig = {
       'todo': { emoji: '📝', text: 'รอดำเนินการ', color: '#999999' },
-      'in_progress': { emoji: '🔄', text: 'กำลังทำ', color: '##f8a720' },
-      'reviewing': { emoji: '👀', text: 'รอตรวจสอบ', color: '##f8a720' },
-      'submitted': { emoji: '⏳', text: 'รอหัวหน้าอนุมัติ', color: '##f8a720' },
-      'completed': { emoji: '✅', text: 'เสร็จสิ้น', color: '##f8a720' }
+      'in_progress': { emoji: '🔄', text: 'กำลังทำ', color: '#3B82F6' },
+      'reviewing': { emoji: '👀', text: 'รอตรวจสอบ', color: '#8B5CF6' },
+      'submitted': { emoji: '⏳', text: 'รอหัวหน้าอนุมัติ', color: '#F59E0B' },
+      'completed': { emoji: '✅', text: 'เสร็จสิ้น', color: '#10B981' }
     };
 
     const newStatusInfo = statusConfig[status] || { emoji: '📌', text: status, color: '#6B7280' };
@@ -197,7 +197,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               text: `${newStatusInfo.emoji} อัปเดตสถานะงาน`,
               weight: 'bold',
               size: 'lg',
-              color: '#000000'
+              color: '#FFFFFF'
             }
           ],
           backgroundColor: newStatusInfo.color,
@@ -396,7 +396,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               text: `${urgencyEmoji} ${urgencyText}`,
               weight: 'bold',
               size: 'lg',
-              color: '#000'
+              color: '#FFFFFF'
             }
           ],
           backgroundColor: urgencyColor,
@@ -586,7 +586,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               weight: 'bold',
               size: 'xxl',
               align: 'center',
-              color: '#000000ff',
+              color: '#FFFFFF',
               margin: 'md'
             },
             {
@@ -594,11 +594,11 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               text: 'โปรเจกต์สำเร็จ',
               size: 'md',
               align: 'center',
-              color: '#000000ff',
+              color: '#FFFFFF',
               margin: 'sm'
             }
           ],
-          backgroundColor: '#f8a720',
+          backgroundColor: '#17C964',
           paddingAll: '30px'
         },
         body: {
@@ -612,7 +612,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               size: 'xl',
               wrap: true,
               align: 'center',
-              color: '#f8a720'
+              color: '#17C964'
             },
             {
               type: 'separator',
@@ -628,6 +628,12 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                   type: 'box',
                   layout: 'horizontal',
                   contents: [
+                    {
+                      type: 'text',
+                      text: '✅',
+                      size: 'xl',
+                      flex: 0
+                    },
                     {
                       type: 'text',
                       text: 'งานทั้งหมดเสร็จสมบูรณ์',
@@ -673,7 +679,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: 'สถานะ: บรรลุเป้าหมาย',
                       size: 'md',
-                      color: '#f8a720',
+                      color: '#17C964',
                       weight: 'bold',
                       flex: 1,
                       margin: 'md'
@@ -718,7 +724,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                 label: 'ดูรายละเอียดโปรเจกต์',
                 uri: projectUrl
               },
-              color: '#f8a720'
+              color: '#17C964'
             }
           ],
           flex: 0
@@ -744,77 +750,6 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('[LINE] Error sending project completion message:', error.response?.data || error.message);
-    return { 
-      success: false, 
-      error: error.response?.data?.message || error.message 
-    };
-  }
-}
-
-/**
- * ดึงรายชื่อ User IDs ของสมาชิกทั้งหมดในกลุ่ม LINE
- * @param {string} lineGroupId - LINE Group ID
- * @returns {Promise<{success: boolean, data?: string[], error?: string}>}
- */
-async function getGroupMemberIds(lineGroupId) {
-  try {
-    if (!LINE_CHANNEL_ACCESS_TOKEN) {
-      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
-    }
-
-    const response = await axios.get(
-      `https://api.line.me/v2/bot/group/${lineGroupId}/members/ids`,
-      {
-        headers: {
-          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
-        }
-      }
-    );
-
-    console.log(`[LINE] Retrieved ${response.data.memberIds?.length || 0} member IDs from group ${lineGroupId}`);
-    return { success: true, data: response.data.memberIds || [] };
-  } catch (error) {
-    console.error('[LINE] Error getting group member IDs:', error.response?.data || error.message);
-    return { 
-      success: false, 
-      error: error.response?.data?.message || error.message 
-    };
-  }
-}
-
-/**
- * ดึงข้อมูลโปรไฟล์ของสมาชิกคนหนึ่งในกลุ่ม LINE
- * @param {string} lineGroupId - LINE Group ID
- * @param {string} userId - LINE User ID
- * @returns {Promise<{success: boolean, data?: object, error?: string}>}
- */
-async function getGroupMemberProfile(lineGroupId, userId) {
-  try {
-    if (!LINE_CHANNEL_ACCESS_TOKEN) {
-      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
-    }
-
-    const response = await axios.get(
-      `https://api.line.me/v2/bot/group/${lineGroupId}/member/${userId}/profile`,
-      {
-        headers: {
-          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
-        }
-      }
-    );
-
-    console.log(`[LINE] Retrieved profile for user ${userId} in group ${lineGroupId}`);
-    return { 
-      success: true, 
-      data: {
-        displayName: response.data.displayName,
-        userId: response.data.userId,
-        pictureUrl: response.data.pictureUrl,
-        statusMessage: response.data.statusMessage
-      }
-    };
-  } catch (error) {
-    console.error(`[LINE] Error getting profile for user ${userId}:`, error.response?.data || error.message);
     return { 
       success: false, 
       error: error.response?.data?.message || error.message 
