@@ -33,7 +33,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               text: '🎉 โปรเจกต์ใหม่!',
               weight: 'bold',
               size: 'xl',
-              color: '#FFFFFF'
+              color: '#000000ff'
             }
           ],
           backgroundColor: '#FFA500',
@@ -54,7 +54,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               type: 'text',
               text: projectData.description,
               size: 'sm',
-              color: '#999999',
+              color: '#000000',
               margin: 'md',
               wrap: true
             }] : []),
@@ -171,10 +171,10 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     // สร้าง status emoji และข้อความ
     const statusConfig = {
       'todo': { emoji: '📝', text: 'รอดำเนินการ', color: '#999999' },
-      'in_progress': { emoji: '🔄', text: 'กำลังทำ', color: '#3B82F6' },
-      'reviewing': { emoji: '👀', text: 'รอตรวจสอบ', color: '#8B5CF6' },
-      'submitted': { emoji: '⏳', text: 'รอหัวหน้าอนุมัติ', color: '#F59E0B' },
-      'completed': { emoji: '✅', text: 'เสร็จสิ้น', color: '#10B981' }
+      'in_progress': { emoji: '🔄', text: 'กำลังทำ', color: '#f8a720' },
+      'reviewing': { emoji: '👀', text: 'รอตรวจสอบ', color: '#f8a720' },
+      'submitted': { emoji: '⏳', text: 'รอหัวหน้าอนุมัติ', color: '#f8a720' },
+      'completed': { emoji: '✅', text: 'เสร็จสิ้น', color: '#f8a720' }
     };
 
     const newStatusInfo = statusConfig[status] || { emoji: '📌', text: status, color: '#6B7280' };
@@ -197,7 +197,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               text: `${newStatusInfo.emoji} อัปเดตสถานะงาน`,
               weight: 'bold',
               size: 'lg',
-              color: '#FFFFFF'
+              color: '#000000ff'
             }
           ],
           backgroundColor: newStatusInfo.color,
@@ -396,7 +396,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               text: `${urgencyEmoji} ${urgencyText}`,
               weight: 'bold',
               size: 'lg',
-              color: '#FFFFFF'
+              color: '#000000ff'
             }
           ],
           backgroundColor: urgencyColor,
@@ -586,7 +586,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               weight: 'bold',
               size: 'xxl',
               align: 'center',
-              color: '#FFFFFF',
+              color: '#000000ff',
               margin: 'md'
             },
             {
@@ -594,11 +594,11 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               text: 'โปรเจกต์สำเร็จ',
               size: 'md',
               align: 'center',
-              color: '#FFFFFF',
+              color: '#000000ff',
               margin: 'sm'
             }
           ],
-          backgroundColor: '#17C964',
+          backgroundColor: '#f8a720',
           paddingAll: '30px'
         },
         body: {
@@ -612,7 +612,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               size: 'xl',
               wrap: true,
               align: 'center',
-              color: '#17C964'
+              color: '#f8a720'
             },
             {
               type: 'separator',
@@ -679,7 +679,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: 'สถานะ: บรรลุเป้าหมาย',
                       size: 'md',
-                      color: '#17C964',
+                      color: '#f8a720',
                       weight: 'bold',
                       flex: 1,
                       margin: 'md'
@@ -724,7 +724,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                 label: 'ดูรายละเอียดโปรเจกต์',
                 uri: projectUrl
               },
-              color: '#17C964'
+              color: '#f8a720'
             }
           ],
           flex: 0
