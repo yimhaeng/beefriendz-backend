@@ -119,7 +119,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
           contents: [
             {
               type: 'button',
-              style: 'primary',
+              style: 'secondary',
               action: {
                 type: 'uri',
                 label: '📋 ดูรายละเอียดโปรเจกต์',
@@ -263,7 +263,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                       type: 'text',
                       text: `${newStatusInfo.emoji} ${newStatusInfo.text}`,
                       size: 'sm',
-                      color: newStatusInfo.color,
+                      color: '#000000',
                       align: 'end',
                       weight: 'bold'
                     }
@@ -320,7 +320,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
           contents: [
             {
               type: 'button',
-              style: 'primary',
+              style: 'secondary',
               action: {
                 type: 'uri',
                 label: 'ดูโปรเจกต์',
@@ -717,7 +717,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
           contents: [
             {
               type: 'button',
-              style: 'primary',
+              style: 'secondary',
               height: 'sm',
               action: {
                 type: 'uri',
