@@ -80,6 +80,8 @@ function getProjectReportHTML(data) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Report</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     * {
@@ -89,7 +91,7 @@ function getProjectReportHTML(data) {
     }
     
     body {
-      font-family: 'Tahoma', 'Arial', 'Cordia New', sans-serif;
+      font-family: 'Noto Sans Thai', 'Tahoma', 'Arial', sans-serif;
       font-size: 12px;
       line-height: 1.8;
       padding: 20px;
