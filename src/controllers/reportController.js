@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 
 const { getProjectReportHTML } = require('../reports/reportTemplate');
-const { getProjectReportData } = require('../services/reportDataService');
+const { getProjectReportData } = require('../controllers/reportDataService');
 
 async function exportProjectReport(req, res) {
   const { projectId } = req.params;
