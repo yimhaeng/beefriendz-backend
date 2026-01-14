@@ -37,10 +37,10 @@ exports.exportProjectReport = async (req, res) => {
         format: 'A4',
         printBackground: true,
         margin: {
-          top: '20px',
-          right: '20px',
-          bottom: '20px',
-          left: '20px',
+          top: 20,
+          right: 20,
+          bottom: 20,
+          left: 20,
         },
       });
 
@@ -50,8 +50,11 @@ exports.exportProjectReport = async (req, res) => {
 
       // Set headers and send the PDF
       res.set({
-        'Content-Disposition': `attachment; filename=project-report-${projectId}.pdf`,
         'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="project-report-${projectId}.pdf"`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       });
 
       console.log(`PDF generated successfully - Size: ${pdf.length} bytes`);
