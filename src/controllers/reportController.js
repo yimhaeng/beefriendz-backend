@@ -67,7 +67,7 @@ exports.exportProjectReport = async (req, res) => {
     console.error('Report export error:', err);
     res.status(500).json({
       error: 'Failed to export report',
-      message: process.env.NODE_ENV === 'development' ? err.message : undefined,
+      message: err?.message || 'Unknown error',
     });
   }
 };
