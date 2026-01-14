@@ -11,6 +11,7 @@ async function getProjectReportData(projectId) {
       description,
       created_at,
       phases,
+      group_id,
       created_by_user:users(display_name, picture_url)
     `)
     .eq('project_id', projectId)
