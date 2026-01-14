@@ -8,7 +8,7 @@ const projectsRoute = require('./routes/projects');
 const tasksRoute = require('./routes/tasks');
 const groupsRoute = require('./routes/groups');
 const groupMembersRoute = require('./routes/groupMembers');
-const reportRoutes = require('./routes/reports');
+const reportRoutes = require('./routes/reportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

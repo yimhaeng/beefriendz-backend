@@ -1,52 +1,32 @@
-// src/controllers/reportController.js
 const puppeteer = require('puppeteer');
-const { getProjectReportHTML } = require('../utils/reportTemplate');
+const { getProjectReportHTML } = require('../reports/reportTemplate');
+const { getProjectReportData } = require('../services/reportDataService');
 
-// ⚠️ สมมติว่าคุณมี function ดึงข้อมูลอยู่แล้ว
-const { getProjectReportData } = require('./reportDataService');
-const projectController = require('./projectController');
-
-exports.exportProjectReport = async (req, res) => {
+async function exportProjectReport(req, res) {
   const { projectId } = req.params;
 
   try {
-    // 1. ดึงข้อมูลจริงจาก DB
-    const reportData = await projectController.getProjectReportData(projectId);
-    /**
-     * reportData ควรมีหน้าตาประมาณ:
-     * {
-     *   project: { name, description, created_at },
-     *   members: [],
-     *   tasks: [],
-     *   logs: []
-     * }
-     */
+    // 1. ดึงข้อมูลจริง
+    const data = await getProjectReportData(projectId);
 
     // 2. สร้าง HTML
-    const html = getProjectReportHTML(reportData);
+    const html = getProjectReportHTML(data);
 
-    // 3. เปิด Puppeteer
+    // 3. เปิด browser
     const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: 'new'
     });
 
     const page = await browser.newPage();
 
     await page.setContent(html, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'networkidle0'
     });
 
     // 4. สร้าง PDF
     const pdfBuffer = await page.pdf({
       format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        bottom: '20mm',
-        left: '15mm',
-        right: '15mm',
-      },
+      printBackground: true
     });
 
     await browser.close();
@@ -54,14 +34,21 @@ exports.exportProjectReport = async (req, res) => {
     // 5. ส่งไฟล์กลับ
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=project-${projectId}-report.pdf`,
-      'Content-Length': pdfBuffer.length,
+      'Content-Disposition': `attachment; filename=project-${projectId}.pdf`,
+      'Content-Length': pdfBuffer.length
     });
 
     res.send(pdfBuffer);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Export report failed' });
+    console.error('[exportProjectReport]', err);
+    res.status(500).json({
+      success: false,
+      message: 'ไม่สามารถสร้างรายงานได้'
+    });
   }
+}
+
+module.exports = {
+  exportProjectReport
 };

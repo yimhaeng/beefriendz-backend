@@ -3,7 +3,6 @@ import { reportHTML } from '../pdf/reportTemplate.js';
 import { generatePDF } from '../pdf/generatePdf.js';
 
 // 🔹 import model / db connection ของคุณ
-import db from '../config/db.js';
 
 export async function exportProjectReport(req, res) {
   try {
@@ -14,12 +13,12 @@ export async function exportProjectReport(req, res) {
     }
 
     // 1️⃣ ดึงข้อมูลโปรเจกต์
-    const project = await db('projects')
+    const project = await supabase('projects')
       .where('project_id', projectId)
       .first();
 
     // 2️⃣ ดึง task + phase + assigned user
-    const tasks = await db('tasks')
+    const tasks = await supabase('tasks')
       .leftJoin('users', 'tasks.assigned_to', 'users.user_id')
       .select(
         'tasks.task_name',
@@ -30,7 +29,7 @@ export async function exportProjectReport(req, res) {
       .where('tasks.project_id', projectId);
 
     // 3️⃣ ดึง activity logs
-    const activityLogs = await db('activity_logs')
+    const activityLogs = await supabase('activity_logs')
       .leftJoin('users', 'activity_logs.user_id', 'users.user_id')
       .select(
         'users.display_name as user_name',
