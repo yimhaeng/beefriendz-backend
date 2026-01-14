@@ -55,10 +55,11 @@ exports.exportProjectReport = async (req, res) => {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
+        'Content-Length': pdf.length,
       });
 
       console.log(`PDF generated successfully - Size: ${pdf.length} bytes`);
-      res.send(pdf);
+      res.status(200).end(pdf);
     } finally {
       await page.close();
       await browser.close();
