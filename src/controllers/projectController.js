@@ -326,11 +326,16 @@ async function getTasksByUser(userId) {
 }
 
 // Get tasks near deadline (for cron notification)
-async function getTasksNearDeadline(daysAhead = 2) {
+async function getTasksNearDeadline(daysAhead = 7) {
   try {
     const today = new Date();
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + daysAhead);
+
+    const todayStr = today.toISOString().split('T')[0];
+    const futureDateStr = futureDate.toISOString().split('T')[0];
+    
+    console.log('Searching for tasks with deadline between:', todayStr, 'and', futureDateStr);
 
     const { data, error } = await supabase
       .from('project_tasks')
@@ -340,12 +345,18 @@ async function getTasksNearDeadline(daysAhead = 2) {
         assigned_user:users!project_tasks_assigned_to_fkey(user_id, display_name, line_user_id)
       `)
       .eq('status', 'pending')
-      .gte('deadline', today.toISOString().split('T')[0])
-      .lte('deadline', futureDate.toISOString().split('T')[0]);
+      .gte('deadline', todayStr)
+      .lte('deadline', futureDateStr);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Database error:', error);
+      throw error;
+    }
+    
+    console.log('Found tasks:', data?.length || 0);
     return { success: true, data };
   } catch (error) {
+    console.error('Error in getTasksNearDeadline:', error);
     return { success: false, error: error.message };
   }
 }
