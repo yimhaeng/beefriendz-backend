@@ -8,6 +8,7 @@ const projectsRoute = require('./routes/projects');
 const tasksRoute = require('./routes/tasks');
 const groupsRoute = require('./routes/groups');
 const groupMembersRoute = require('./routes/groupMembers');
+const reportRoutes = require('./routes/reports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,6 +47,7 @@ app.use('/api/projects', projectsRoute);
 app.use('/api/tasks', tasksRoute);
 app.use('/api/groups', groupsRoute);
 app.use('/api/group-members', groupMembersRoute);
+app.use('/api/reports', reportRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
