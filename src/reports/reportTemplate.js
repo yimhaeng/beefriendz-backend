@@ -34,6 +34,45 @@ function getProjectReportHTML(data) {
     return String(text).replace(/[&<>"']/g, (m) => map[m]);
   };
 
+  // Thai localization
+  const thaiStatus = (status) => {
+    const map = {
+      pending: 'รอดำเนินการ',
+      in_progress: 'กำลังทำ',
+      'in-progress': 'กำลังทำ',
+      submitted: 'ส่งงานแล้ว',
+      reviewing: 'รออนุมัติ',
+      completed: 'เสร็จสิ้น',
+    };
+    return map[status] || status;
+  };
+
+  const thaiLabels = {
+    projectDetails: 'รายละเอียดโปรเจกต์',
+    projectId: 'ID โปรเจกต์',
+    groupId: 'ID กลุ่ม',
+    createdAt: 'วันที่สร้าง',
+    description: 'คำอธิบาย',
+    teamMembers: 'สมาชิกทีม',
+    role: 'บทบาท',
+    taskStatusSummary: 'สรุปสถานะงาน',
+    status: 'สถานะ',
+    count: 'จำนวน',
+    percent: 'เปอร์เซ็นต์',
+    totalTasks: 'งานทั้งหมด',
+    taskName: 'ชื่องาน',
+    assignedTo: 'มอบให้',
+    tasksByPhase: 'งานตามระยะ',
+    activityLogs: 'บันทึกกิจกรรม',
+    user: 'ผู้ใช้',
+    action: 'การกระทำ',
+    time: 'เวลา',
+    generatedOn: 'สร้างเมื่อ',
+    noDescription: 'ไม่มีคำอธิบาย',
+    noPhase: 'ไม่มีระยะ',
+    unassigned: 'ยังไม่มีผู้รับผิดชอบ',
+  };
+
   return `
 <!DOCTYPE html>
 <html lang="th">
@@ -50,9 +89,9 @@ function getProjectReportHTML(data) {
     }
     
     body {
-      font-family: 'Arial', 'Tahoma', sans-serif;
+      font-family: 'Tahoma', 'Arial', 'Cordia New', sans-serif;
       font-size: 12px;
-      line-height: 1.6;
+      line-height: 1.8;
       padding: 20px;
       color: #000;
       background: white;
@@ -161,20 +200,20 @@ function getProjectReportHTML(data) {
 <body>
 
   <div class="header-info">
-    <h1>Project Report</h1>
-    <div class="project-title">${escapeHtml(project?.project_name || 'Untitled Project')}</div>
-    <div class="project-meta">Created by: ${escapeHtml(project?.created_by_user?.display_name || 'Unknown')}</div>
-    <div class="project-meta">Date: ${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'N/A'}</div>
+    <h1>รายงานโปรเจกต์</h1>
+    <div class="project-title">${escapeHtml(project?.project_name || 'โปรเจกต์ไม่มีชื่อ')}</div>
+    <div class="project-meta">สร้างโดย: ${escapeHtml(project?.created_by_user?.display_name || 'ไม่ทราบ')}</div>
+    <div class="project-meta">วันที่: ${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</div>
   </div>
 
   <div class="section" style="page-break-inside: avoid;">
-    <h2>Project Details</h2>
+    <h2>${thaiLabels.projectDetails}</h2>
     <table>
       <tbody>
-        <tr><th style="width: 30%;">Project ID</th><td>${escapeHtml(project?.project_id || '')}</td></tr>
-        <tr><th>Group ID</th><td>${escapeHtml(project?.group_id || '')}</td></tr>
-        <tr><th>Created At</th><td>${project?.created_at ? new Date(project.created_at).toLocaleString('th-TH') : 'N/A'}</td></tr>
-        <tr><th>Description</th><td>${escapeHtml(project?.description || 'No description')}</td></tr>
+        <tr><th style="width: 30%;">${thaiLabels.projectId}</th><td>${escapeHtml(project?.project_id || '')}</td></tr>
+        <tr><th>${thaiLabels.groupId}</th><td>${escapeHtml(project?.group_id || '')}</td></tr>
+        <tr><th>${thaiLabels.createdAt}</th><td>${project?.created_at ? new Date(project.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</td></tr>
+        <tr><th>${thaiLabels.description}</th><td>${escapeHtml(project?.description || thaiLabels.noDescription)}</td></tr>
       </tbody>
     </table>
   </div>
@@ -188,57 +227,50 @@ function getProjectReportHTML(data) {
 
   ${members && members.length > 0 ? `
   <div class="section">
-    <h2>Team Members</h2>
+    <h2>${thaiLabels.teamMembers}</h2>
     <ul>
-      ${members.map(m => `<li>${escapeHtml(m.users?.display_name || 'Unknown')} (${escapeHtml(m.role || 'member')})</li>`).join('')}
+      ${members.map(m => `<li>${escapeHtml(m.users?.display_name || 'ไม่ทราบ')} (${escapeHtml(m.role || 'สมาชิก')})</li>`).join('')}
     </ul>
   </div>
   ` : ''}
 
   <div class="section" style="page-break-inside: avoid;">
-    <h2>Task Status Summary</h2>
+    <h2>${thaiLabels.taskStatusSummary}</h2>
     <table>
       <thead>
         <tr>
-          <th>Status</th>
-          <th>Count</th>
-          <th>Percent</th>
+          <th>${thaiLabels.status}</th>
+          <th>${thaiLabels.count}</th>
+          <th>${thaiLabels.percent}</th>
         </tr>
       </thead>
       <tbody>
         ${Object.entries(statusCounts).map(([status, count]) => {
           const percent = totalTasks ? Math.round((count / totalTasks) * 100) : 0;
-          const labelMap = {
-            pending: 'Pending',
-            in_progress: 'In Progress',
-            submitted: 'Submitted',
-            reviewing: 'Reviewing',
-            completed: 'Completed',
-          };
-          return `<tr><td>${labelMap[status] || status}</td><td>${count}</td><td>${percent}%</td></tr>`;
+          return `<tr><td>${thaiStatus(status)}</td><td>${count}</td><td>${percent}%</td></tr>`;
         }).join('')}
       </tbody>
     </table>
-    <p style="font-size: 11px; margin-top: 6px;">Total Tasks: ${totalTasks}</p>
+    <p style="font-size: 11px; margin-top: 6px;">${thaiLabels.totalTasks}: ${totalTasks}</p>
   </div>
 
   ${tasks && tasks.length > 0 ? `
   <div class="section">
-    <h2>Tasks</h2>
+    <h2>${thaiLabels.taskName}</h2>
     <table>
       <thead>
         <tr>
-          <th style="width: 50%;">Task Name</th>
-          <th style="width: 20%;">Status</th>
-          <th style="width: 30%;">Assigned To</th>
+          <th style="width: 50%;">${thaiLabels.taskName}</th>
+          <th style="width: 20%;">${thaiLabels.status}</th>
+          <th style="width: 30%;">${thaiLabels.assignedTo}</th>
         </tr>
       </thead>
       <tbody>
         ${tasks.map(t => `
           <tr>
-            <td>${escapeHtml(t.task_name || 'Untitled')}</td>
-            <td>${escapeHtml(t.status || 'pending')}</td>
-            <td>${escapeHtml(t.assigned_user?.display_name || 'Unassigned')}</td>
+            <td>${escapeHtml(t.task_name || 'ไม่มีชื่อ')}</td>
+            <td>${thaiStatus(t.status || 'pending')}</td>
+            <td>${escapeHtml(t.assigned_user?.display_name || thaiLabels.unassigned)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -248,23 +280,23 @@ function getProjectReportHTML(data) {
 
   ${Object.keys(phaseBuckets).length ? `
   <div class="section">
-    <h2>Tasks by Phase</h2>
+    <h2>${thaiLabels.tasksByPhase}</h2>
     ${Object.entries(phaseBuckets).map(([phase, phaseTasks]) => `
       <h3 style="margin: 10px 0 6px 0;">${escapeHtml(phase)} (${phaseTasks.length})</h3>
       <table>
         <thead>
           <tr>
-            <th style="width: 45%;">Task Name</th>
-            <th style="width: 20%;">Status</th>
-            <th style="width: 35%;">Assigned To</th>
+            <th style="width: 45%;">${thaiLabels.taskName}</th>
+            <th style="width: 20%;">${thaiLabels.status}</th>
+            <th style="width: 35%;">${thaiLabels.assignedTo}</th>
           </tr>
         </thead>
         <tbody>
           ${phaseTasks.map(t => `
             <tr>
-              <td>${escapeHtml(t.task_name || 'Untitled')}</td>
-              <td>${escapeHtml(t.status || 'pending')}</td>
-              <td>${escapeHtml(t.assigned_user?.display_name || 'Unassigned')}</td>
+              <td>${escapeHtml(t.task_name || 'ไม่มีชื่อ')}</td>
+              <td>${thaiStatus(t.status || 'pending')}</td>
+              <td>${escapeHtml(t.assigned_user?.display_name || thaiLabels.unassigned)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -275,19 +307,19 @@ function getProjectReportHTML(data) {
 
   ${logs && logs.length > 0 ? `
   <div class="section">
-    <h2>Activity Logs</h2>
+    <h2>${thaiLabels.activityLogs}</h2>
     ${logs.map(log => `
       <div class="log-entry">
-        <div class="log-user">${escapeHtml(log.users?.display_name || 'Unknown User')}</div>
-        <div class="log-action">${escapeHtml(log.action || 'Updated')}</div>
-        <div class="log-time">${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'N/A'}</div>
+        <div class="log-user">${escapeHtml(log.users?.display_name || 'ผู้ใช้ไม่ทราบ')}</div>
+        <div class="log-action">${escapeHtml(log.action || 'อัปเดต')}</div>
+        <div class="log-time">${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</div>
       </div>
     `).join('')}
   </div>
   ` : ''}
 
   <div class="footer">
-    <p>Generated on ${new Date().toLocaleDateString('th-TH')} at ${new Date().toLocaleTimeString('th-TH')}</p>
+    <p>${thaiLabels.generatedOn} ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')}</p>
   </div>
 
 </body>
