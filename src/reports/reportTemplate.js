@@ -19,6 +19,7 @@ function getProjectReportHTML(data) {
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Report</title>
 
   <style>
@@ -48,11 +49,6 @@ function getProjectReportHTML(data) {
       font-size: 14px;
       border-bottom: 2px solid #333;
       padding-bottom: 5px;
-    }
-
-    h3 {
-      font-size: 12px;
-      margin: 10px 0 5px 0;
     }
 
     .section {
@@ -193,7 +189,7 @@ function getProjectReportHTML(data) {
 
   ${logs && logs.length > 0 ? `
   <div class="section">
-    <h2>Activity Logs</h2>
+    <h2>Activity Logs (Recent 50)</h2>
     ${logs.slice(0, 50).map(log => `
       <div class="log-entry">
         <div class="log-user">${escapeHtml(log.users?.display_name || 'Unknown User')}</div>
@@ -211,16 +207,6 @@ function getProjectReportHTML(data) {
 </body>
 </html>
   `;
-}
-
-module.exports = {
-  getProjectReportHTML
-};
-  </div>
-
-</body>
-</html>
-`;
 }
 
 module.exports = {
