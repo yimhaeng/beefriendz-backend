@@ -1,6 +1,26 @@
 function getProjectReportHTML(data) {
   const { project, members, tasks, logs } = data;
 
+  // Pre-compute summary data
+  const totalTasks = tasks?.length || 0;
+  const statusCounts = {
+    pending: tasks?.filter(t => t.status === 'pending').length || 0,
+    in_progress: tasks?.filter(t => t.status === 'in_progress' || t.status === 'in-progress').length || 0,
+    submitted: tasks?.filter(t => t.status === 'submitted').length || 0,
+    reviewing: tasks?.filter(t => t.status === 'reviewing').length || 0,
+    completed: tasks?.filter(t => t.status === 'completed').length || 0,
+  };
+
+  const phaseBuckets = (() => {
+    const bucket = {};
+    (tasks || []).forEach(t => {
+      const phase = t.phase_name || 'No Phase';
+      if (!bucket[phase]) bucket[phase] = [];
+      bucket[phase].push(t);
+    });
+    return bucket;
+  })();
+
   // Helper function to escape HTML
   const escapeHtml = (text) => {
     if (!text) return '';
@@ -147,6 +167,18 @@ function getProjectReportHTML(data) {
     <div class="project-meta">Date: ${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'N/A'}</div>
   </div>
 
+  <div class="section" style="page-break-inside: avoid;">
+    <h2>Project Details</h2>
+    <table>
+      <tbody>
+        <tr><th style="width: 30%;">Project ID</th><td>${escapeHtml(project?.project_id || '')}</td></tr>
+        <tr><th>Group ID</th><td>${escapeHtml(project?.group_id || '')}</td></tr>
+        <tr><th>Created At</th><td>${project?.created_at ? new Date(project.created_at).toLocaleString('th-TH') : 'N/A'}</td></tr>
+        <tr><th>Description</th><td>${escapeHtml(project?.description || 'No description')}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   ${project?.description ? `
   <div class="section">
     <h2>Description</h2>
@@ -162,6 +194,33 @@ function getProjectReportHTML(data) {
     </ul>
   </div>
   ` : ''}
+
+  <div class="section" style="page-break-inside: avoid;">
+    <h2>Task Status Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Count</th>
+          <th>Percent</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${Object.entries(statusCounts).map(([status, count]) => {
+          const percent = totalTasks ? Math.round((count / totalTasks) * 100) : 0;
+          const labelMap = {
+            pending: 'Pending',
+            in_progress: 'In Progress',
+            submitted: 'Submitted',
+            reviewing: 'Reviewing',
+            completed: 'Completed',
+          };
+          return `<tr><td>${labelMap[status] || status}</td><td>${count}</td><td>${percent}%</td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <p style="font-size: 11px; margin-top: 6px;">Total Tasks: ${totalTasks}</p>
+  </div>
 
   ${tasks && tasks.length > 0 ? `
   <div class="section">
@@ -187,10 +246,37 @@ function getProjectReportHTML(data) {
   </div>
   ` : ''}
 
+  ${Object.keys(phaseBuckets).length ? `
+  <div class="section">
+    <h2>Tasks by Phase</h2>
+    ${Object.entries(phaseBuckets).map(([phase, phaseTasks]) => `
+      <h3 style="margin: 10px 0 6px 0;">${escapeHtml(phase)} (${phaseTasks.length})</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 45%;">Task Name</th>
+            <th style="width: 20%;">Status</th>
+            <th style="width: 35%;">Assigned To</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${phaseTasks.map(t => `
+            <tr>
+              <td>${escapeHtml(t.task_name || 'Untitled')}</td>
+              <td>${escapeHtml(t.status || 'pending')}</td>
+              <td>${escapeHtml(t.assigned_user?.display_name || 'Unassigned')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `).join('')}
+  </div>
+  ` : ''}
+
   ${logs && logs.length > 0 ? `
   <div class="section">
-    <h2>Activity Logs (Recent 50)</h2>
-    ${logs.slice(0, 50).map(log => `
+    <h2>Activity Logs</h2>
+    ${logs.map(log => `
       <div class="log-entry">
         <div class="log-user">${escapeHtml(log.users?.display_name || 'Unknown User')}</div>
         <div class="log-action">${escapeHtml(log.action || 'Updated')}</div>
