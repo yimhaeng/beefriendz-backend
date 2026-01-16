@@ -227,7 +227,7 @@ function getProjectReportHTML(data) {
     <h2>Team Participation</h2>
     ${participationData.map((member, idx) => `
       <p style="font-size: 11px; margin: 5px 0;">
-        ${idx + 1}. ${escapeHtml(member.userName)} (${escapeHtml(m.role || 'สมาชิก')}): ${member.taskCount} งาน
+        ${idx + 1}. ${escapeHtml(member.userName)} (${escapeHtml(member.role || 'สมาชิก')}): ${member.taskCount} งาน
       </p>
     `).join('')}
   </div>
