@@ -227,31 +227,12 @@ function getProjectReportHTML(data) {
     <h2>Team Participation</h2>
     ${participationData.map((member, idx) => `
       <p style="font-size: 11px; margin: 5px 0;">
-        ${idx + 1}. ${escapeHtml(member.userName)}: ${member.taskCount} tasks
+        ${idx + 1}. ${escapeHtml(member.userName)} (${escapeHtml(m.role || 'สมาชิก')}): ${member.taskCount} งาน
       </p>
     `).join('')}
   </div>
   ` : ''}
 
-  <div class="section" style="page-break-inside: avoid;">
-    <h2>${thaiLabels.taskStatusSummary}</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>${thaiLabels.status}</th>
-          <th>${thaiLabels.count}</th>
-          <th>${thaiLabels.percent}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${Object.entries(statusCounts).map(([status, count]) => {
-          const percent = totalTasks ? Math.round((count / totalTasks) * 100) : 0;
-          return `<tr><td>${thaiStatus(status)}</td><td>${count}</td><td>${percent}%</td></tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <p style="font-size: 11px; margin-top: 6px;">${thaiLabels.totalTasks}: ${totalTasks}</p>
-  </div>
 
   ${tasks && tasks.length > 0 ? `
   <div class="section">
