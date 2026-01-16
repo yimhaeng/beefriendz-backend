@@ -49,13 +49,16 @@ exports.exportProjectReport = async (req, res) => {
       }
 
       // Set headers and send the PDF
+      // Use 'attachment' for better mobile browser support
       res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="project-report-${projectId}.pdf"`,
+        'Content-Disposition': `attachment; filename="project-report-${projectId}.pdf"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
         'Content-Length': pdf.length,
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Expose-Headers': 'Content-Disposition',
       });
 
       console.log(`PDF generated successfully - Size: ${pdf.length} bytes`);
