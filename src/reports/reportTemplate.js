@@ -213,18 +213,9 @@ function getProjectReportHTML(data) {
     <p style="font-size: 11px; line-height: 1.5;">${escapeHtml(project.description)}</p>
   </div>
 
-  ${members && members.length > 0 ? `
-  <div class="section">
-    <h2>${thaiLabels.teamMembers}</h2>
-    <ul>
-      ${members.map(m => `<li>${escapeHtml(m.users?.display_name || 'ไม่ทราบ')} (${escapeHtml(m.role || 'สมาชิก')})</li>`).join('')}
-    </ul>
-  </div>
-  ` : ''}
-
   ${participationData?.length ? `
   <div class="section">
-    <h2>Team Participation</h2>
+    <h2>สมาชิกทีมและจำนวนงาน</h2>
     ${participationData.map((member, idx) => `
       <p style="font-size: 11px; margin: 5px 0;">
         ${idx + 1}. ${escapeHtml(member.userName)} (${escapeHtml(member.role || 'สมาชิก')}): ${member.taskCount} งาน
@@ -236,13 +227,13 @@ function getProjectReportHTML(data) {
 
   ${tasks && tasks.length > 0 ? `
   <div class="section">
-    <h2>${thaiLabels.taskName}</h2>
+    <h2>งานที่มอบหมายทั้งหมด</h2>
     <table>
       <thead>
         <tr>
-          <th style="width: 50%;">${thaiLabels.taskName}</th>
-          <th style="width: 20%;">${thaiLabels.status}</th>
-          <th style="width: 30%;">${thaiLabels.assignedTo}</th>
+          <th style="width: 50%;">ชื่องาน</th>
+          <th style="width: 20%;">สถานะ</th>
+          <th style="width: 30%;">ผู้รับผิดชอบ</th>
         </tr>
       </thead>
       <tbody>
@@ -260,7 +251,7 @@ function getProjectReportHTML(data) {
 
   ${logs && logs.length > 0 ? `
   <div class="section">
-    <h2>${thaiLabels.activityLogs}</h2>
+    <h2>บันทึกกิจกรรม</h2>
     ${logs.map(log => `
       <div class="log-entry">
         <div class="log-user">${escapeHtml(log.user?.display_name || 'ผู้ใช้ไม่ทราบ')}</div>
