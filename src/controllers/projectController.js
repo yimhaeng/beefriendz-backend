@@ -361,6 +361,38 @@ async function getTasksNearDeadline(daysAhead = 7) {
   }
 }
 
+// Get overdue tasks (tasks past deadline)
+async function getOverdueTasks() {
+  try {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    console.log('Searching for overdue tasks before:', todayStr);
+
+    const { data, error } = await supabase
+      .from('project_tasks')
+      .select(`
+        *,
+        project:projects(project_id, project_name, group_id, groups(line_group_id)),
+        assigned_user:users!project_tasks_assigned_to_fkey(user_id, display_name, line_user_id)
+      `)
+      .in('status', ['pending', 'in_progress'])
+      .lt('deadline', todayStr)
+      .order('deadline', { ascending: true });
+
+    if (error) {
+      console.error('Database error:', error);
+      throw error;
+    }
+    
+    console.log('Found overdue tasks:', data?.length || 0);
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error in getOverdueTasks:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 // ========== ATTACHMENTS ==========
 
 // Get attachments by task_id
@@ -592,6 +624,7 @@ module.exports = {
   deleteTask,
   getTasksByUser,
   getTasksNearDeadline,
+  getOverdueTasks,
   
   // Attachments
   getAttachmentsByTask,

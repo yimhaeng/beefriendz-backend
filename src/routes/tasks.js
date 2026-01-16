@@ -41,6 +41,17 @@ router.get('/near-deadline', async (req, res) => {
   }
 });
 
+// GET /api/tasks/overdue - Get all overdue tasks
+router.get('/overdue', async (req, res) => {
+  const result = await projectController.getOverdueTasks();
+  
+  if (result.success) {
+    res.json(result.data);
+  } else {
+    res.status(500).json({ error: result.error });
+  }
+});
+
 // POST /api/tasks/send-deadline-reminders - Send LINE notifications for tasks near deadline
 router.post('/send-deadline-reminders', async (req, res) => {
   try {
