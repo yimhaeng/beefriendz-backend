@@ -125,7 +125,7 @@ function getProjectReportHTML(data) {
     }
 
     .project-title {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
       margin: 10px 0;
     }
@@ -213,13 +213,6 @@ function getProjectReportHTML(data) {
     <p style="font-size: 11px; line-height: 1.5;">${escapeHtml(project.description)}</p>
   </div>
 
-  ${project?.description ? `
-  <div class="section">
-    <h2>Description</h2>
-    
-  </div>
-  ` : ''}
-
   ${members && members.length > 0 ? `
   <div class="section">
     <h2>${thaiLabels.teamMembers}</h2>
@@ -228,6 +221,20 @@ function getProjectReportHTML(data) {
     </ul>
   </div>
   ` : ''}
+
+    <div style="margin: 20px 0;">
+    <h2 style="font-size: 14px; margin-top: 0;">Team Participation</h2>
+  ${data.participationData?.length ? `
+    <div style="margin: 20px 0;">
+      <h2 style="font-size: 14px; margin-top: 0;">Team Participation</h2>
+      ${data.participationData.map((member, idx) => `
+        <p style="font-size: 11px; margin: 5px 0;">
+          ${idx + 1}. ${escapeHtml(member.userName)}: ${member.taskCount} tasks
+        </p>
+      `).join('')}
+    </div>
+  ` : ''}
+    </div>
 
   <div class="section" style="page-break-inside: avoid;">
     <h2>${thaiLabels.taskStatusSummary}</h2>
