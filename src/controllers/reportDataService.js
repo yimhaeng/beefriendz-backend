@@ -55,14 +55,14 @@ async function getProjectReportData(projectId) {
   });
   const participationData = Object.values(participationMap).sort((a, b) => b.taskCount - a.taskCount);
 
-  // 4. logs
+  // 4. logs (use activity_logs table)
   const { data: logs } = await supabase
-    .from('task_logs')
+    .from('activity_logs')
     .select(`
-      action,
-      detail,
+      action_type,
+      description,
       created_at,
-      users(display_name)
+      user:users(display_name)
     `)
     .eq('project_id', projectId)
     .order('created_at');

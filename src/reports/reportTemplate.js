@@ -277,40 +277,13 @@ function getProjectReportHTML(data) {
   </div>
   ` : ''}
 
-  ${Object.keys(phaseBuckets).length ? `
-  <div class="section">
-    <h2>${thaiLabels.tasksByPhase}</h2>
-    ${Object.entries(phaseBuckets).map(([phase, phaseTasks]) => `
-      <h3 style="margin: 10px 0 6px 0;">${escapeHtml(phase)} (${phaseTasks.length})</h3>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 45%;">${thaiLabels.taskName}</th>
-            <th style="width: 20%;">${thaiLabels.status}</th>
-            <th style="width: 35%;">${thaiLabels.assignedTo}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${phaseTasks.map(t => `
-            <tr>
-              <td>${escapeHtml(t.task_name || 'ไม่มีชื่อ')}</td>
-              <td>${thaiStatus(t.status || 'pending')}</td>
-              <td>${escapeHtml(t.assigned_user?.display_name || thaiLabels.unassigned)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `).join('')}
-  </div>
-  ` : ''}
-
   ${logs && logs.length > 0 ? `
   <div class="section">
     <h2>${thaiLabels.activityLogs}</h2>
     ${logs.map(log => `
       <div class="log-entry">
-        <div class="log-user">${escapeHtml(log.users?.display_name || 'ผู้ใช้ไม่ทราบ')}</div>
-        <div class="log-action">${escapeHtml(log.action || 'อัปเดต')}</div>
+        <div class="log-user">${escapeHtml(log.user?.display_name || 'ผู้ใช้ไม่ทราบ')}</div>
+        <div class="log-action">${escapeHtml(log.description || log.action_type || 'อัปเดต')}</div>
         <div class="log-time">${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</div>
       </div>
     `).join('')}
