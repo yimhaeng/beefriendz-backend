@@ -33,12 +33,27 @@ async function getProjectReportData(projectId) {
     `)
     .eq('group_id', project.group_id);
 
-  // 3. tasks
+  // 3. tasks (use project_tasks to match app schema and include assignee details)
   const { data: tasks } = await supabase
-    .from('tasks')
-    .select('*')
+    .from('project_tasks')
+    .select(`
+      *,
+      assigned_user:users!project_tasks_assigned_to_fkey(user_id, display_name, picture_url)
+    `)
     .eq('project_id', projectId)
     .order('created_at');
+
+  // 3.1 participation summary per user
+  const participationMap = {};
+  (tasks || []).forEach(task => {
+    const name = task.assigned_user?.display_name;
+    if (!name) return; // skip unassigned
+    if (!participationMap[name]) {
+      participationMap[name] = { userName: name, taskCount: 0 };
+    }
+    participationMap[name].taskCount += 1;
+  });
+  const participationData = Object.values(participationMap).sort((a, b) => b.taskCount - a.taskCount);
 
   // 4. logs
   const { data: logs } = await supabase
@@ -56,6 +71,7 @@ async function getProjectReportData(projectId) {
     project,
     members: members || [],
     tasks: tasks || [],
+    participationData,
     logs: logs || [],
   };
 }

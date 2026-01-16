@@ -1,5 +1,5 @@
 function getProjectReportHTML(data) {
-  const { project, members, tasks, logs } = data;
+  const { project, members, tasks, logs, participationData } = data;
 
   // Pre-compute summary data
   const totalTasks = tasks?.length || 0;
@@ -222,19 +222,16 @@ function getProjectReportHTML(data) {
   </div>
   ` : ''}
 
-    <div style="margin: 20px 0;">
-    <h2 style="font-size: 14px; margin-top: 0;">Team Participation</h2>
-  ${data.participationData?.length ? `
-    <div style="margin: 20px 0;">
-      <h2 style="font-size: 14px; margin-top: 0;">Team Participation</h2>
-      ${data.participationData.map((member, idx) => `
-        <p style="font-size: 11px; margin: 5px 0;">
-          ${idx + 1}. ${escapeHtml(member.userName)}: ${member.taskCount} tasks
-        </p>
-      `).join('')}
-    </div>
+  ${participationData?.length ? `
+  <div class="section">
+    <h2>Team Participation</h2>
+    ${participationData.map((member, idx) => `
+      <p style="font-size: 11px; margin: 5px 0;">
+        ${idx + 1}. ${escapeHtml(member.userName)}: ${member.taskCount} tasks
+      </p>
+    `).join('')}
+  </div>
   ` : ''}
-    </div>
 
   <div class="section" style="page-break-inside: avoid;">
     <h2>${thaiLabels.taskStatusSummary}</h2>
