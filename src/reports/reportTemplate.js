@@ -210,20 +210,13 @@ function getProjectReportHTML(data) {
 
   <div class="section" style="page-break-inside: avoid;">
     <h2>${thaiLabels.projectDetails}</h2>
-    <table>
-      <tbody>
-        <tr><th style="width: 30%;">${thaiLabels.projectId}</th><td>${escapeHtml(project?.project_id || '')}</td></tr>
-        <tr><th>${project.groupId}</th><td>${escapeHtml(project?.group_id || '')}</td></tr>
-        <tr><th>${thaiLabels.createdAt}</th><td>${project?.created_at ? new Date(project.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</td></tr>
-        <tr><th>${thaiLabels.description}</th><td>${escapeHtml(project?.description || thaiLabels.noDescription)}</td></tr>
-      </tbody>
-    </table>
+    <p style="font-size: 11px; line-height: 1.5;">${escapeHtml(project.description)}</p>
   </div>
 
   ${project?.description ? `
   <div class="section">
     <h2>Description</h2>
-    <p style="font-size: 11px; line-height: 1.5;">${escapeHtml(project.description)}</p>
+    
   </div>
   ` : ''}
 
