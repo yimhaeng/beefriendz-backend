@@ -56,7 +56,7 @@ async function getProjectReportData(projectId) {
   const participationData = Object.values(participationMap).sort((a, b) => b.taskCount - a.taskCount);
 
   // 4. logs (use activity_logs table)
-  const { data: logs } = await supabase
+  const { data: logs, error: logsError } = await supabase
     .from('activity_logs')
     .select(`
       action_type,
@@ -66,6 +66,11 @@ async function getProjectReportData(projectId) {
     `)
     .eq('project_id', projectId)
     .order('created_at');
+
+  if (logsError) {
+    console.error('[reportDataService] Error fetching logs:', logsError);
+  }
+  console.log('[reportDataService] Logs fetched:', logs?.length || 0, 'records');
 
   return {
     project,
