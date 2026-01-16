@@ -17,6 +17,13 @@ exports.exportProjectReport = async (req, res) => {
     console.log(`Generating PDF report for project: ${projectId}`);
 
     const data = await getProjectReportData(projectId);
+    console.log('[reportController] Data summary:', {
+      project: !!data.project,
+      members: data.members?.length || 0,
+      tasks: data.tasks?.length || 0,
+      participationData: data.participationData?.length || 0,
+      logs: data.logs?.length || 0
+    });
     const html = getProjectReportHTML(data);
 
     const browser = await puppeteer.launch({

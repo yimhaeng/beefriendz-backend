@@ -277,7 +277,9 @@ function getProjectReportHTML(data) {
   </div>
   ` : ''}
 
-  ${logs && logs.length > 0 ? `
+  ${(() => {
+    console.log('[reportTemplate] logs check:', { hasLogs: !!logs, length: logs?.length || 0 });
+    return logs && logs.length > 0 ? `
   <div class="section">
     <h2>${thaiLabels.activityLogs}</h2>
     ${logs.map(log => `
@@ -288,7 +290,8 @@ function getProjectReportHTML(data) {
       </div>
     `).join('')}
   </div>
-  ` : ''}
+  ` : '';
+  })()}
 
 
   <div class="footer">
