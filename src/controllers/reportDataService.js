@@ -71,6 +71,7 @@ async function getProjectReportData(projectId) {
     console.error('[reportDataService] Error fetching logs:', logsError);
   }
   console.log('[reportDataService] Logs fetched:', logs?.length || 0, 'records');
+  console.log('[reportDataService] First log sample:', JSON.stringify(logs?.[0], null, 2));
 
   return {
     project,
