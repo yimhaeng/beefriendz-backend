@@ -361,7 +361,7 @@ async function getTasksNearDeadline(daysAhead = 7) {
   }
 }
 
-// Get overdue tasks (tasks past deadline)
+// Get overdue tasks (tasks that passed deadline)
 async function getOverdueTasks() {
   try {
     const today = new Date();
@@ -376,9 +376,8 @@ async function getOverdueTasks() {
         project:projects(project_id, project_name, group_id, groups(line_group_id)),
         assigned_user:users!project_tasks_assigned_to_fkey(user_id, display_name, line_user_id)
       `)
-      .in('status', ['pending', 'in_progress'])
-      .lt('deadline', todayStr)
-      .order('deadline', { ascending: true });
+      .eq('status', 'pending')
+      .lt('deadline', todayStr);
 
     if (error) {
       console.error('Database error:', error);

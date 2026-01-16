@@ -41,7 +41,7 @@ router.get('/near-deadline', async (req, res) => {
   }
 });
 
-// GET /api/tasks/overdue - Get all overdue tasks
+// GET /api/tasks/overdue - Get overdue tasks (for cron)
 router.get('/overdue', async (req, res) => {
   const result = await projectController.getOverdueTasks();
   
@@ -64,19 +64,29 @@ router.post('/send-deadline-reminders', async (req, res) => {
       return res.status(500).json({ error: tasksResult.error });
     }
 
-    const tasks = tasksResult.data;
+    // ดึงงานที่เลยเดดไลน์แล้ว
+    const overdueResult = await projectController.getOverdueTasks();
     
-    if (tasks.length === 0) {
+    if (!overdueResult.success) {
+      return res.status(500).json({ error: overdueResult.error });
+    }
+
+    // รวมงานทั้งสองประเภท
+    const allTasks = [...tasksResult.data, ...overdueResult.data];
+    
+    if (allTasks.length === 0) {
       return res.json({ 
         success: true, 
-        message: 'No tasks near deadline',
-        tasksSent: 0 
+        message: 'No tasks near deadline or overdue',
+        tasksSent: 0,
+        nearDeadline: 0,
+        overdue: 0
       });
     }
 
     // จัดกลุ่มงานตาม line_group_id
     const tasksByGroup = {};
-    tasks.forEach(task => {
+    allTasks.forEach(task => {
       const lineGroupId = task.project?.groups?.line_group_id;
       if (lineGroupId) {
         if (!tasksByGroup[lineGroupId]) {
@@ -100,7 +110,9 @@ router.post('/send-deadline-reminders', async (req, res) => {
 
     res.json({
       success: true,
-      totalTasks: tasks.length,
+      totalTasks: allTasks.length,
+      nearDeadline: tasksResult.data.length,
+      overdue: overdueResult.data.length,
       groupsNotified: Object.keys(tasksByGroup).length,
       results
     });
