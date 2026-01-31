@@ -148,8 +148,14 @@ async function getActiveSessions(req, res) {
       .from('work_sessions')
       .select(`
         *,
-        user:user_id (user_id, name, line_id, group_id),
-        task:task_id (id, title, description, status, project:project_id(group_id))
+        user:user_id (user_id, display_name, line_user_id, picture_url),
+        task:task_id (
+          task_id,
+          task_name,
+          description,
+          status,
+          project:project_id (project_id, project_name, group_id)
+        )
       `)
       .eq('status', 'active')
       .is('ended_at', null)
@@ -165,7 +171,9 @@ async function getActiveSessions(req, res) {
     // Filter by group_id if provided
     let filteredSessions = sessions || [];
     if (group_id && filteredSessions.length > 0) {
-      filteredSessions = filteredSessions.filter(s => s.user?.group_id === group_id);
+      filteredSessions = filteredSessions.filter(
+        s => String(s?.task?.project?.group_id) === String(group_id)
+      );
     }
 
     res.json({ success: true, sessions: filteredSessions });
@@ -183,18 +191,28 @@ async function getActivePresence(req, res) {
   try {
     const { group_id } = req.query;
 
-    // Cleanup presence ที่ offline เกิน 5 นาที
-    await supabase.rpc('cleanup_offline_presence');
+    // Cleanup presence ที่ offline เกิน 5 นาที (ถ้า function มีอยู่)
+    try {
+      await supabase.rpc('cleanup_offline_presence');
+    } catch (rpcError) {
+      console.warn('[getActivePresence] cleanup_offline_presence failed:', rpcError?.message || rpcError);
+    }
 
     const { data: presence, error } = await supabase
       .from('workspace_presence')
       .select(`
         *,
-        user:user_id (user_id, name, line_id, group_id),
+        user:user_id (user_id, display_name, line_user_id, picture_url),
         session:session_id (
           session_id,
           started_at,
-          task:task_id (id, title, description, status)
+          task:task_id (
+            task_id,
+            task_name,
+            description,
+            status,
+            project:project_id (project_id, project_name, group_id)
+          )
         )
       `)
       .eq('is_online', true)
@@ -208,7 +226,9 @@ async function getActivePresence(req, res) {
     // Filter by group_id if provided
     let filteredPresence = presence || [];
     if (group_id && filteredPresence.length > 0) {
-      filteredPresence = filteredPresence.filter(p => p.user?.group_id === group_id);
+      filteredPresence = filteredPresence.filter(
+        p => String(p?.session?.task?.project?.group_id) === String(group_id)
+      );
     }
 
     res.json({ success: true, presence: filteredPresence });

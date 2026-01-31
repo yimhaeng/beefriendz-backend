@@ -170,7 +170,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     
     // สร้าง status emoji และข้อความ
     const statusConfig = {
-      'todo': { text: 'รอดำเนินการ', color: '#999999' },
+      'todo': { text: 'รอดำเนินการ', color: '#040000' },
       'in_progress': { text: 'กำลังทำ', color: '#f8a720' },
       'reviewing': { text: 'รอตรวจสอบ', color: '#f8a720' },
       'submitted': { text: 'รอหัวหน้าอนุมัติ', color: '#f8a720' },
@@ -185,7 +185,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `${newStatusInfo.emoji} งาน "${task_name}" เปลี่ยนเป็น ${newStatusInfo.text}`,
+      altText: `งาน "${task_name}" เปลี่ยนเป็น ${newStatusInfo.text}`,
       contents: {
         type: 'bubble',
         hero: {
@@ -194,7 +194,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
           contents: [
             {
               type: 'text',
-              text: `${newStatusInfo.emoji} อัปเดตสถานะงาน`,
+              text: `อัปเดตสถานะงาน`,
               weight: 'bold',
               size: 'lg',
               color: '#000000ff'
@@ -261,7 +261,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                     },
                     {
                       type: 'text',
-                      text: `${newStatusInfo.emoji} ${newStatusInfo.text}`,
+                      text: `${newStatusInfo.text}`,
                       size: 'sm',
                       color: '#000000',
                       align: 'end',
