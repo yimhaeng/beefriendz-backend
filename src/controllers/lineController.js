@@ -21,7 +21,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `🎉 สร้างโปรเจกต์ "${projectData.project_name}" สำเร็จ!`,
+      altText: `สร้างโปรเจกต์ "${projectData.project_name}" สำเร็จ!`,
       contents: {
         type: 'bubble',
         hero: {
@@ -420,12 +420,6 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               contents: [
                 {
                   type: 'text',
-                  text: '📋',
-                  size: 'sm',
-                  flex: 0
-                },
-                {
-                  type: 'text',
                   text: task.project?.project_name || 'ไม่ระบุโปรเจกต์',
                   size: 'sm',
                   color: '#6B7280',
@@ -450,7 +444,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📅 เดดไลน์:',
+                      text: 'เดดไลน์:',
                       size: 'sm',
                       color: '#6B7280',
                       flex: 0
@@ -475,7 +469,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '👤 ผู้รับผิดชอบ:',
+                      text: 'ผู้รับผิดชอบ:',
                       size: 'sm',
                       color: '#6B7280',
                       flex: 0
@@ -502,7 +496,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               style: 'primary',
               action: {
                 type: 'uri',
-                label: '📋 ดูรายละเอียด',
+                label: 'ดูรายละเอียด',
                 uri: `${liffUrl}/projectdetail/${task.project?.project_id || ''}`
               },
               color: urgencyColor,
@@ -516,7 +510,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
     // สร้าง carousel message
     const flexMessage = {
       type: 'flex',
-      altText: `⏰ แจ้งเตือน: มี ${tasksData.length} งานใกล้ถึงเดดไลน์`,
+      altText: `แจ้งเตือน: มี ${tasksData.length} งานใกล้ถึงเดดไลน์`,
       contents: {
         type: 'carousel',
         contents: taskBubbles
@@ -564,7 +558,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `🎊 ยินดีด้วย! โปรเจกต์ "${projectData.project_name}" เสร็จสมบูรณ์แล้ว!`,
+      altText: `ยินดีด้วย! โปรเจกต์ "${projectData.project_name}" เสร็จสมบูรณ์แล้ว!`,
       contents: {
         type: 'bubble',
         size: 'giga',
@@ -572,13 +566,6 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
           type: 'box',
           layout: 'vertical',
           contents: [
-            {
-              type: 'text',
-              text: '🎊',
-              size: '5xl',
-              align: 'center',
-              margin: 'md'
-            },
             {
               type: 'text',
               text: 'ยินดีด้วย!',
@@ -959,7 +946,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `🏢 ${user.display_name || 'สมาชิก'} เริ่มทำงานใน Workspace แล้ว!`,
+      altText: `${user.display_name || 'สมาชิก'} เริ่มทำงานใน Workspace แล้ว!`,
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -973,7 +960,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
               contents: [
                 {
                   type: 'text',
-                  text: '🏢 Workspace',
+                  text: 'Workspace',
                   color: '#ffffff',
                   size: 'xl',
                   weight: 'bold',
@@ -1058,12 +1045,6 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📋',
-                      size: 'sm',
-                      flex: 0
-                    },
-                    {
-                      type: 'text',
                       text: task.task_name || 'Untitled Task',
                       size: 'sm',
                       color: '#111111',
@@ -1076,12 +1057,6 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   type: 'box',
                   layout: 'horizontal',
                   contents: [
-                    {
-                      type: 'text',
-                      text: '📁',
-                      size: 'sm',
-                      flex: 0
-                    },
                     {
                       type: 'text',
                       text: project.project_name || 'Project',
@@ -1099,7 +1074,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'มาร่วมทำงานกันใน Workspace 🚀',
+                      text: 'มาร่วมทำงานกันใน Workspace',
                       size: 'md',
                       color: '#FFA500',
                       weight: 'bold',
