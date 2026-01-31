@@ -943,11 +943,232 @@ async function syncLineGroupMembers(groupId, lineGroupId) {
   }
 }
 
+/**
+ * ส่ง Flex Message แจ้งเตือนเมื่อมีคนเริ่ม work session
+ */
+async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { user, task, project } = sessionData;
+    
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const workspaceUrl = `${liffUrl}/workspace?groupId=${project.group_id}`;
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `🏢 ${user.display_name || 'สมาชิก'} เริ่มทำงานใน Workspace แล้ว!`,
+      contents: {
+        type: 'bubble',
+        size: 'mega',
+        hero: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'vertical',
+              contents: [
+                {
+                  type: 'text',
+                  text: '🏢 Workspace',
+                  color: '#ffffff',
+                  size: 'xl',
+                  weight: 'bold',
+                  align: 'center'
+                },
+                {
+                  type: 'text',
+                  text: 'มาทำงานด้วยกัน!',
+                  color: '#ffffff',
+                  size: 'sm',
+                  align: 'center',
+                  margin: 'sm'
+                }
+              ]
+            }
+          ],
+          paddingAll: '20px',
+          backgroundColor: '#FFA500',
+          spacing: 'md',
+          height: '120px',
+          justifyContent: 'center'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'vertical',
+                  contents: [
+                    {
+                      type: 'image',
+                      url: user.picture_url || 'https://via.placeholder.com/100',
+                      aspectMode: 'cover',
+                      size: 'full'
+                    }
+                  ],
+                  cornerRadius: '100px',
+                  width: '60px',
+                  height: '60px'
+                },
+                {
+                  type: 'box',
+                  layout: 'vertical',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: user.display_name || 'สมาชิก',
+                      weight: 'bold',
+                      size: 'lg',
+                      wrap: true
+                    },
+                    {
+                      type: 'text',
+                      text: 'เริ่มทำงานแล้ว',
+                      size: 'sm',
+                      color: '#999999',
+                      margin: 'sm'
+                    }
+                  ],
+                  margin: 'lg'
+                }
+              ]
+            },
+            {
+              type: 'separator',
+              margin: 'xl'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📋',
+                      size: 'sm',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: task.task_name || 'Untitled Task',
+                      size: 'sm',
+                      color: '#111111',
+                      wrap: true,
+                      margin: 'sm'
+                    }
+                  ]
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📁',
+                      size: 'sm',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: project.project_name || 'Project',
+                      size: 'sm',
+                      color: '#555555',
+                      wrap: true,
+                      margin: 'sm'
+                    }
+                  ],
+                  margin: 'sm'
+                },
+                {
+                  type: 'box',
+                  layout: 'vertical',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: 'มาร่วมทำงานกันใน Workspace 🚀',
+                      size: 'md',
+                      color: '#FFA500',
+                      weight: 'bold',
+                      align: 'center',
+                      wrap: true
+                    }
+                  ],
+                  margin: 'xl',
+                  paddingAll: '12px',
+                  backgroundColor: '#FFF8E1',
+                  cornerRadius: '8px'
+                }
+              ]
+            }
+          ],
+          paddingAll: '20px'
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'button',
+              action: {
+                type: 'uri',
+                label: 'เข้า Workspace',
+                uri: workspaceUrl
+              },
+              style: 'primary',
+              color: '#FFA500',
+              height: 'sm'
+            }
+          ],
+          paddingAll: '20px'
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Workspace invite sent successfully:', response.data);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending workspace invite:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
   sendTaskStatusUpdateMessage,
   sendDeadlineReminder,
   sendProjectCompletedMessage,
+  sendWorkspaceInviteMessage,
   // getGroupMemberIds,
   // getGroupMemberProfile,
   getAllGroupMemberProfiles,

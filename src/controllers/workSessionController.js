@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const lineController = require('./lineController');
 
 /**
  * เริ่ม work session ใหม่
@@ -70,6 +71,47 @@ async function startWorkSession(req, res) {
 
     if (presenceError) {
       console.error('Error creating presence:', presenceError);
+    }
+
+    // ดึงข้อมูลเพิ่มเติมสำหรับส่ง LINE notification
+    const { data: sessionWithDetails, error: detailsError } = await supabase
+      .from('work_sessions')
+      .select(`
+        *,
+        user:user_id (user_id, display_name, picture_url),
+        task:task_id (
+          task_id,
+          task_name,
+          description,
+          project:project_id (
+            project_id,
+            project_name,
+            group_id,
+            groups:group_id (group_id, line_group_id)
+          )
+        )
+      `)
+      .eq('session_id', newSession.session_id)
+      .single();
+
+    // ส่ง LINE notification แจ้งเตือนไปที่ group (ไม่ block response)
+    if (!detailsError && sessionWithDetails?.task?.project?.groups?.line_group_id) {
+      const lineGroupId = sessionWithDetails.task.project.groups.line_group_id;
+      
+      // ส่ง notification แบบ async (ไม่รอ)
+      lineController.sendWorkspaceInviteMessage(lineGroupId, {
+        user: sessionWithDetails.user,
+        task: sessionWithDetails.task,
+        project: sessionWithDetails.task.project
+      }).then(result => {
+        if (result.success) {
+          console.log('[startWorkSession] LINE notification sent successfully');
+        } else {
+          console.warn('[startWorkSession] LINE notification failed:', result.error);
+        }
+      }).catch(err => {
+        console.error('[startWorkSession] LINE notification error:', err);
+      });
     }
 
     res.json({ success: true, session: newSession });
