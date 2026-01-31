@@ -190,6 +190,42 @@ async function getTasksByProject(projectId) {
   }
 }
 
+// Get all tasks by group_id
+async function getTasksByGroup(groupId) {
+  try {
+    // ดึงทุก project ของ group นี้ก่อน
+    const { data: projects, error: projectError } = await supabase
+      .from('projects')
+      .select('project_id')
+      .eq('group_id', groupId);
+
+    if (projectError) throw projectError;
+
+    if (!projects || projects.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const projectIds = projects.map(p => p.project_id);
+
+    // ดึง tasks ทั้งหมดของ projects เหล่านี้
+    const { data, error } = await supabase
+      .from('project_tasks')
+      .select(`
+        *,
+        project:projects(project_id, project_name, group_id),
+        assigned_user:users!project_tasks_assigned_to_fkey(user_id, display_name, picture_url),
+        created_by_user:users!project_tasks_created_by_fkey(user_id, display_name, picture_url)
+      `)
+      .in('project_id', projectIds)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 // Get single task by ID
 async function getTaskById(taskId) {
   try {
@@ -617,6 +653,7 @@ module.exports = {
   
   // Tasks
   getTasksByProject,
+  getTasksByGroup,
   getTaskById,
   createTask,
   updateTask,

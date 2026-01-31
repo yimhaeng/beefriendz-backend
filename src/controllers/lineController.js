@@ -30,7 +30,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
           contents: [
             {
               type: 'text',
-              text: '🎉 โปรเจกต์ใหม่!',
+              text: 'โปรเจกต์ใหม่!',
               weight: 'bold',
               size: 'xl',
               color: '#000000ff'
@@ -74,7 +74,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📅 เริ่ม:',
+                      text: 'เริ่ม:',
                       size: 'sm',
                       color: '#555555',
                       flex: 0
@@ -94,7 +94,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '🏁 สิ้นสุด:',
+                      text: 'สิ้นสุด:',
                       size: 'sm',
                       color: '#555555',
                       flex: 0
@@ -122,7 +122,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               style: 'secondary',
               action: {
                 type: 'uri',
-                label: '📋 ดูรายละเอียดโปรเจกต์',
+                label: 'ดูรายละเอียดโปรเจกต์',
                 uri: projectUrl
               },
               color: '#FFA500'
@@ -170,15 +170,15 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     
     // สร้าง status emoji และข้อความ
     const statusConfig = {
-      'todo': { emoji: '📝', text: 'รอดำเนินการ', color: '#999999' },
-      'in_progress': { emoji: '🔄', text: 'กำลังทำ', color: '#f8a720' },
-      'reviewing': { emoji: '👀', text: 'รอตรวจสอบ', color: '#f8a720' },
-      'submitted': { emoji: '⏳', text: 'รอหัวหน้าอนุมัติ', color: '#f8a720' },
-      'completed': { emoji: '✅', text: 'เสร็จสิ้น', color: '#f8a720' }
+      'todo': { text: 'รอดำเนินการ', color: '#999999' },
+      'in_progress': { text: 'กำลังทำ', color: '#f8a720' },
+      'reviewing': { text: 'รอตรวจสอบ', color: '#f8a720' },
+      'submitted': { text: 'รอหัวหน้าอนุมัติ', color: '#f8a720' },
+      'completed': { text: 'เสร็จสิ้น', color: '#f8a720' }
     };
 
-    const newStatusInfo = statusConfig[status] || { emoji: '📌', text: status, color: '#6B7280' };
-    const oldStatusInfo = statusConfig[old_status] || { emoji: '📌', text: old_status, color: '#6B7280' };
+    const newStatusInfo = statusConfig[status] || { text: status, color: '#6B7280' };
+    const oldStatusInfo = statusConfig[old_status] || { text: old_status, color: '#6B7280' };
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${project.project_id}`;
@@ -382,7 +382,6 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
       const daysLeft = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
       
       const urgencyColor = daysLeft <= 1 ? '#EF4444' : daysLeft <= 2 ? '#F59E0B' : '#10B981';
-      const urgencyEmoji = daysLeft <= 1 ? '🔴' : daysLeft <= 2 ? '🟡' : '🟢';
       const urgencyText = daysLeft <= 0 ? 'เลยเดดไลน์!' : daysLeft === 1 ? 'พรุ่งนี้!' : `อีก ${daysLeft} วัน`;
 
       return {
@@ -393,7 +392,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
           contents: [
             {
               type: 'text',
-              text: `${urgencyEmoji} ${urgencyText}`,
+              text: `${urgencyText}`,
               weight: 'bold',
               size: 'lg',
               color: '#000000ff'
@@ -630,12 +629,6 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '✅',
-                      size: 'xl',
-                      flex: 0
-                    },
-                    {
-                      type: 'text',
                       text: 'งานทั้งหมดเสร็จสมบูรณ์',
                       size: 'md',
                       color: '#555555',
@@ -648,12 +641,6 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                   type: 'box',
                   layout: 'horizontal',
                   contents: [
-                    {
-                      type: 'text',
-                      text: '📊',
-                      size: 'xl',
-                      flex: 0
-                    },
                     {
                       type: 'text',
                       text: `รวม ${projectData.total_tasks} งาน`,
@@ -669,12 +656,6 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                   type: 'box',
                   layout: 'horizontal',
                   contents: [
-                    {
-                      type: 'text',
-                      text: '🏆',
-                      size: 'xl',
-                      flex: 0
-                    },
                     {
                       type: 'text',
                       text: 'สถานะ: บรรลุเป้าหมาย',
@@ -695,7 +676,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               contents: [
                 {
                   type: 'text',
-                  text: '🎉 ขอแสดงความยินดีกับทุกคนที่ร่วมงานกันค่ะ!',
+                  text: 'ขอแสดงความยินดีกับทุกคนที่ร่วมงานกันค่ะ!',
                   wrap: true,
                   color: '#8B8B8B',
                   size: 'sm',

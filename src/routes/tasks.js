@@ -5,6 +5,18 @@ const lineController = require('../controllers/lineController');
 
 // ========== TASK ROUTES ==========
 
+// GET /api/tasks/group/:groupId - Get all tasks by group
+router.get('/group/:groupId', async (req, res) => {
+  const { groupId } = req.params;
+  const result = await projectController.getTasksByGroup(groupId);
+  
+  if (result.success) {
+    res.json(result.data);
+  } else {
+    res.status(500).json({ error: result.error });
+  }
+});
+
 // GET /api/tasks/project/:projectId - Get all tasks by project
 router.get('/project/:projectId', async (req, res) => {
   const { projectId } = req.params;
