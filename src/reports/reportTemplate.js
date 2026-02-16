@@ -267,8 +267,7 @@ function getProjectReportHTML(data) {
     ${logs.map(log => `
       <div class="log-entry">
         <div class="log-user">${escapeHtml(log.user?.display_name || 'ผู้ใช้ไม่ทราบ')}</div>
-        <div class="log-action">${escapeHtml(log.description || log.action_type || 'อัปเดต')}</div>
-        <div class="log-time">${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</div>
+        <div class="log-action log-time">${escapeHtml(log.description || log.action_type || 'อัปเดต')} ${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</div>
       </div>
     `).join('')}
   </div>
