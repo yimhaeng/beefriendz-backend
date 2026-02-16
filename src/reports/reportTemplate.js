@@ -21,6 +21,18 @@ function getProjectReportHTML(data) {
     return bucket;
   })();
 
+  const sortedParticipationData = [...(participationData || [])].sort((a, b) => {
+    const aRole = String(a?.role || '').toLowerCase();
+    const bRole = String(b?.role || '').toLowerCase();
+
+    const aIsLeader = aRole === 'leader' || aRole === 'หัวหน้า' || aRole === 'หัวหน้ากลุ่ม';
+    const bIsLeader = bRole === 'leader' || bRole === 'หัวหน้า' || bRole === 'หัวหน้ากลุ่ม';
+
+    if (aIsLeader && !bIsLeader) return -1;
+    if (!aIsLeader && bIsLeader) return 1;
+    return 0;
+  });
+
   // Helper function to escape HTML
   const escapeHtml = (text) => {
     if (!text) return '';
@@ -213,10 +225,10 @@ function getProjectReportHTML(data) {
     <p style="font-size: 11px; line-height: 1.5;">${escapeHtml(project.description)}</p>
   </div>
 
-  ${participationData?.length ? `
+  ${sortedParticipationData.length ? `
   <div class="section">
     <h2>สมาชิกทีมและจำนวนงาน</h2>
-    ${participationData.map((member, idx) => `
+    ${sortedParticipationData.map((member, idx) => `
       <p style="font-size: 11px; margin: 5px 0;">
         ${idx + 1}. ${escapeHtml(member.userName)} (${escapeHtml(member.role || 'สมาชิก')}): ${member.taskCount} งาน
       </p>
