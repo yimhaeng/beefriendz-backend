@@ -27,29 +27,74 @@ async function startWorkSession(req, res) {
       return res.status(500).json({ error: 'Failed to check existing sessions' });
     }
 
-    // ถ้ามี session active อยู่แล้ว ให้ปิดก่อน
+    // ถ้าเจอ session อยู่สำหรับ task เดียวกัน → ให้ resume (เปลี่ยน sleep → active)
     if (existingSessions && existingSessions.length > 0) {
-      for (const session of existingSessions) {
-        const duration = Math.floor((new Date() - new Date(session.started_at)) / 1000);
-        await supabase
-          .from('work_sessions')
+      const resumeSession = existingSessions.find(s => String(s.task_id) === String(task_id));
+      
+      if (resumeSession) {
+        // Resume session เดิม - ไม่ต้องสร้างใหม่
+        console.log(`[startWorkSession] Resuming session ${resumeSession.session_id} for task ${task_id}`);
+        
+        // อัปเดต presence เป็น active
+        const { error: presenceError } = await supabase
+          .from('workspace_presence')
           .update({
-            ended_at: new Date().toISOString(),
-            duration_seconds: duration,
-            status: 'completed'
+            is_online: true,
+            last_active: new Date().toISOString(),
+            activity_stage: 'active'
           })
-          .eq('session_id', session.session_id);
+          .eq('session_id', resumeSession.session_id);
+
+        if (presenceError) {
+          console.error('Error updating presence:', presenceError);
+        }
+
+        // ดึงข้อมูล session ที่ updated
+        const { data: updatedSession, error: fetchError } = await supabase
+          .from('work_sessions')
+          .select('*')
+          .eq('session_id', resumeSession.session_id)
+          .single();
+
+        if (!fetchError) {
+          return res.json({ success: true, session: updatedSession });
+        }
+      }
+      
+      // ถ้าเจอ session อยู่แต่ task ต่างกัน → ปิด session เก่า
+      for (const session of existingSessions) {
+        if (String(session.task_id) !== String(task_id)) {
+          const duration = Math.floor((new Date() - new Date(session.started_at)) / 1000);
+          await supabase
+            .from('work_sessions')
+            .update({
+              ended_at: new Date().toISOString(),
+              duration_seconds: duration,
+              status: 'completed'
+            })
+            .eq('session_id', session.session_id);
+
+          // อัปเดต presence เป็น offline
+          await supabase
+            .from('workspace_presence')
+            .update({
+              is_online: false,
+              activity_stage: 'offline'
+            })
+            .eq('session_id', session.session_id);
+        }
       }
     }
 
-    // สร้าง session ใหม่
+    // สร้าง session ใหม่ (ถ้ายังไม่มี session สำหรับ task นี้)
     const { data: newSession, error: insertError } = await supabase
       .from('work_sessions')
       .insert({
         user_id,
         task_id,
         started_at: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        last_activity_at: new Date().toISOString()
       })
       .select()
       .single();
