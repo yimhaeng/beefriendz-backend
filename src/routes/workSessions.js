@@ -7,7 +7,9 @@ const {
   getActivePresence,
   updatePresence,
   getUserSessionHistory,
-  getUserSessionStats
+  getUserSessionStats,
+  updateActivityStage,
+  checkAndAutoEndSleepSessions
 } = require('../controllers/workSessionController');
 
 // เริ่ม work session
@@ -30,5 +32,11 @@ router.get('/history/:userId', getUserSessionHistory);
 
 // ดึงสถิติ work sessions
 router.get('/stats/:userId', getUserSessionStats);
+
+// อัปเดต activity stage (active/sleep/offline)
+router.post('/update-stage', updateActivityStage);
+
+// ตรวจสอบและจบ sleep sessions ที่หมดเวลา
+router.post('/check-auto-end-sleep', checkAndAutoEndSleepSessions);
 
 module.exports = router;

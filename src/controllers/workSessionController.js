@@ -402,12 +402,130 @@ async function getUserSessionStats(req, res) {
   }
 }
 
+/**
+ * อัปเดต activity stage (active/sleep/offline)
+ * POST /api/work-sessions/activity-stage
+ * Body: { session_id, activity_stage }
+ */
+async function updateActivityStage(req, res) {
+  try {
+    const { session_id, activity_stage } = req.body;
+
+    if (!session_id || !activity_stage) {
+      return res.status(400).json({ error: 'session_id and activity_stage are required' });
+    }
+
+    if (!['active', 'sleep', 'offline'].includes(activity_stage)) {
+      return res.status(400).json({ error: 'Invalid activity_stage value' });
+    }
+
+    // อัปเดต presence stage และ last_activity_at
+    const { error: updateError } = await supabase
+      .from('workspace_presence')
+      .update({
+        activity_stage,
+        last_active: new Date().toISOString()
+      })
+      .eq('session_id', session_id);
+
+    if (updateError) {
+      console.error('Error updating activity stage:', updateError);
+      return res.status(500).json({ error: 'Failed to update activity stage' });
+    }
+
+    // อัปเดต last_activity_at ใน work_sessions ด้วย
+    if (activity_stage === 'active') {
+      await supabase
+        .from('work_sessions')
+        .update({
+          last_activity_at: new Date().toISOString()
+        })
+        .eq('session_id', session_id);
+    }
+
+    res.json({ success: true, stage: activity_stage });
+  } catch (err) {
+    console.error('updateActivityStage error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+/**
+ * Check และ auto-end sessions ที่อยู่ sleep mode > 30 นาที
+ * POST /api/work-sessions/check-sleep-timeout
+ * Body: { session_id }
+ */
+async function checkAndAutoEndSleepSessions(req, res) {
+  try {
+    const { session_id } = req.body;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+
+    // หา session
+    const { data: session, error: fetchError } = await supabase
+      .from('work_sessions')
+      .select('*')
+      .eq('session_id', session_id)
+      .eq('status', 'active')
+      .is('ended_at', null)
+      .single();
+
+    if (fetchError || !session) {
+      return res.status(404).json({ error: 'Session not found or already ended' });
+    }
+
+    // ตรวจสอบว่า sleep > 30 นาทีหรือไม่
+    const lastActivityTime = new Date(session.last_activity_at || session.started_at);
+    const timeDiffMinutes = (new Date() - lastActivityTime) / (1000 * 60);
+
+    if (timeDiffMinutes > 30) {
+      // Auto end session
+      const duration = Math.floor((new Date() - new Date(session.started_at)) / 1000);
+      
+      const { data: updatedSession, error: updateError } = await supabase
+        .from('work_sessions')
+        .update({
+          ended_at: new Date().toISOString(),
+          duration_seconds: duration,
+          status: 'completed'
+        })
+        .eq('session_id', session_id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error auto-ending session:', updateError);
+        return res.status(500).json({ error: 'Failed to auto-end session' });
+      }
+
+      // อัปเดต presence เป็น offline
+      await supabase
+        .from('workspace_presence')
+        .update({ activity_stage: 'offline', is_online: false })
+        .eq('session_id', session_id);
+
+      console.log(`[checkAndAutoEndSleepSessions] Session ${session_id} auto-ended after ${timeDiffMinutes} minutes`);
+      
+      return res.json({ success: true, auto_ended: true, reason: 'sleep_timeout', session: updatedSession });
+    }
+
+    res.json({ success: true, auto_ended: false, remaining_minutes: Math.round(30 - timeDiffMinutes) });
+  } catch (err) {
+    console.error('checkAndAutoEndSleepSessions error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   startWorkSession,
   endWorkSession,
   getActiveSessions,
   getActivePresence,
   updatePresence,
+  updateActivityStage,
+  checkAndAutoEndSleepSessions,
   getUserSessionHistory,
   getUserSessionStats
 };
