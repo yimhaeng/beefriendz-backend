@@ -563,6 +563,93 @@ async function checkAndAutoEndSleepSessions(req, res) {
   }
 }
 
+/**
+ * ส่ง wake-up notification ไปหา user ที่ sleep
+ * POST /api/work-sessions/wake-user
+ * Body: { target_user_id }
+ */
+async function wakeUpUser(req, res) {
+  try {
+    const { target_user_id } = req.body;
+
+    if (!target_user_id) {
+      return res.status(400).json({ error: 'target_user_id is required' });
+    }
+
+    // ดึงข้อมูล active session ของ target user
+    const { data: targetSession, error: sessionError } = await supabase
+      .from('work_sessions')
+      .select(`
+        *,
+        user:user_id (user_id, display_name, line_user_id, picture_url),
+        task:task_id (
+          task_id,
+          task_name,
+          project:project_id (
+            project_id,
+            project_name,
+            group_id,
+            groups:group_id (group_id, line_group_id)
+          )
+        )
+      `)
+      .eq('user_id', target_user_id)
+      .eq('status', 'active')
+      .is('ended_at', null)
+      .single();
+
+    if (sessionError || !targetSession) {
+      return res.status(404).json({ error: 'No active session found for target user' });
+    }
+
+    // ตรวจสอบว่า session เป็น sleep mode ไหม
+    const { data: presenceData } = await supabase
+      .from('workspace_presence')
+      .select('activity_stage')
+      .eq('session_id', targetSession.session_id)
+      .single();
+
+    const isInSleepMode = presenceData?.activity_stage === 'sleep';
+    
+    if (!isInSleepMode) {
+      return res.status(400).json({ error: 'User is not in sleep mode' });
+    }
+
+    // ดึงข้อมูล caller
+    const { data: callerSession, error: callerError } = await supabase
+      .from('work_sessions')
+      .select(`user:user_id (display_name, line_user_id)`)
+      .eq('status', 'active')
+      .is('ended_at', null)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const callerName = callerSession?.user?.display_name || 'สมาชิก';
+
+    // ส่ง LINE notification โดยใช้ line_user_id ของ target user
+    if (!targetSession.user?.line_user_id) {
+      return res.status(400).json({ error: 'Target user has no LINE ID' });
+    }
+
+    const { sendWakeUpNotification } = require('./lineController');
+    const result = await sendWakeUpNotification(targetSession.user.line_user_id, {
+      caller_name: callerName,
+      task_name: targetSession.task?.task_name || 'Untitled Task',
+      group_id: targetSession.task?.project?.group_id
+    });
+
+    if (!result.success) {
+      return res.status(500).json({ error: 'Failed to send wake-up notification' });
+    }
+
+    res.json({ success: true, message: 'Wake-up notification sent' });
+  } catch (err) {
+    console.error('wakeUpUser error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   startWorkSession,
   endWorkSession,
@@ -571,6 +658,7 @@ module.exports = {
   updatePresence,
   updateActivityStage,
   checkAndAutoEndSleepSessions,
+  wakeUpUser,
   getUserSessionHistory,
   getUserSessionStats
 };

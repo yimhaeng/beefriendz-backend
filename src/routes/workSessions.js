@@ -9,7 +9,8 @@ const {
   getUserSessionHistory,
   getUserSessionStats,
   updateActivityStage,
-  checkAndAutoEndSleepSessions
+  checkAndAutoEndSleepSessions,
+  wakeUpUser
 } = require('../controllers/workSessionController');
 
 // เริ่ม work session
@@ -38,5 +39,8 @@ router.post('/update-stage', updateActivityStage);
 
 // ตรวจสอบและจบ sleep sessions ที่หมดเวลา
 router.post('/check-auto-end-sleep', checkAndAutoEndSleepSessions);
+
+// ส่ง wake-up notification ไปหา user ที่ sleep
+router.post('/wake-user', wakeUpUser);
 
 module.exports = router;

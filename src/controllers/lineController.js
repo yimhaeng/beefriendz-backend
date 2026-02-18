@@ -1138,12 +1138,138 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
   }
 }
 
+/**
+ * ส่ง Wake-up notification ไป LINE user ที่ sleep
+ * โดยการส่ง direct message (push) ไปหา user
+ */
+async function sendWakeUpNotification(lineUserId, wakeupData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { caller_name, task_name, group_id } = wakeupData;
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const workspaceUrl = `${liffUrl}/workspace?groupId=${group_id}`;
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `${caller_name} เรียกให้ต่อสำหรับ ${task_name}`,
+      contents: {
+        type: 'bubble',
+        size: 'mega',
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'vertical',
+              contents: [
+                {
+                  type: 'text',
+                  text: 'ปลุก!',
+                  color: '#ffffff',
+                  size: 'xl',
+                  weight: 'bold',
+                  align: 'center'
+                },
+                {
+                  type: 'text',
+                  text: `${caller_name} เรียกให้ต่อสู้`,
+                  color: '#ffffff',
+                  size: 'sm',
+                  align: 'center',
+                  margin: 'sm'
+                }
+              ],
+              paddingAll: '20px',
+              backgroundColor: '#FF5722',
+              cornerRadius: '12px'
+            },
+            {
+              type: 'separator',
+              margin: 'md'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'md',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'text',
+                  text: 'งานที่รอ',
+                  weight: 'bold',
+                  size: 'sm',
+                  color: '#999999'
+                },
+                {
+                  type: 'text',
+                  text: task_name || 'No task assigned',
+                  weight: 'bold',
+                  size: 'lg',
+                  color: '#111111',
+                  wrap: true
+                }
+              ]
+            }
+          ],
+          spacing: 'md'
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: 'กลับมาทำงาน',
+                uri: workspaceUrl
+              },
+              color: '#FFA500'
+            }
+          ]
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineUserId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Wake-up notification sent successfully to:', lineUserId);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending wake-up notification:', error.response?.data || error.message);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message 
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
   sendTaskStatusUpdateMessage,
   sendDeadlineReminder,
   sendProjectCompletedMessage,
   sendWorkspaceInviteMessage,
+  sendWakeUpNotification,
   // getGroupMemberIds,
   // getGroupMemberProfile,
   getAllGroupMemberProfiles,
