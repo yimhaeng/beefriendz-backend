@@ -25,8 +25,8 @@ function getProjectReportHTML(data) {
     const aRole = String(a?.role || '').toLowerCase();
     const bRole = String(b?.role || '').toLowerCase();
 
-    const aIsLeader = aRole === 'leader' || aRole === 'หัวหน้า' || aRole === 'หัวหน้ากลุ่ม';
-    const bIsLeader = bRole === 'leader' || bRole === 'หัวหน้า' || bRole === 'หัวหน้ากลุ่ม';
+    const aIsLeader = aRole === 'leader';
+    const bIsLeader = bRole === 'leader';
 
     if (aIsLeader && !bIsLeader) return -1;
     if (!aIsLeader && bIsLeader) return 1;
