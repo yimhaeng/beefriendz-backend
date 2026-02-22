@@ -976,21 +976,12 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   weight: 'bold',
                   align: 'center'
                 },
-                {
-                  type: 'text',
-                  text: 'มาทำงานด้วยกัน!',
-                  color: THEME.white,
-                  size: 'sm',
-                  align: 'center',
-                  margin: 'sm'
-                }
               ]
             }
           ],
           paddingAll: '20px',
           backgroundColor: THEME.primary,
           spacing: 'md',
-          height: '120px',
           justifyContent: 'center'
         },
         body: {
@@ -1078,25 +1069,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   ],
                   margin: 'sm'
                 },
-                {
-                  type: 'box',
-                  layout: 'vertical',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: 'มาร่วมทำงานกันใน Workspace',
-                      size: 'md',
-                      color: THEME.primary,
-                      weight: 'bold',
-                      align: 'center',
-                      wrap: true
-                    }
-                  ],
-                  margin: 'xl',
-                  paddingAll: '12px',
-                  backgroundColor: THEME.background,
-                  cornerRadius: '8px'
-                }
+
               ]
             }
           ],
@@ -1265,28 +1238,6 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                     }
                   ]
                 }] : []),
-                {
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: 'เข้าร่วม:',
-                      size: 'sm',
-                      color: THEME.muted,
-                      flex: 0
-                    },
-                    {
-                      type: 'text',
-                      text: `${acceptedCount}/${participants ? participants.length : 0} คน`,
-                      size: 'sm',
-                      color: THEME.primary,
-                      weight: 'bold',
-                      align: 'end',
-                      flex: 3
-                    }
-                  ]
-                },
                 {
                   type: 'box',
                   layout: 'horizontal',
