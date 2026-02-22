@@ -971,10 +971,10 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                 {
                   type: 'text',
                   text: 'Workspace',
-                  color: THEME.white,
+                  color: THEME.text,
                   size: 'xl',
                   weight: 'bold',
-                  align: 'center'
+                  align: 'start'
                 },
               ]
             }
