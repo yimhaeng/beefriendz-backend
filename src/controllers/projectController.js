@@ -2,6 +2,19 @@ const supabase = require('../config/supabase');
 
 // ========== PROJECTS ==========
 
+function parsePhases(phasesValue) {
+  if (!phasesValue) return null;
+  if (Array.isArray(phasesValue)) return phasesValue;
+  if (typeof phasesValue !== 'string') return phasesValue;
+
+  try {
+    const parsed = JSON.parse(phasesValue);
+    return parsed;
+  } catch (error) {
+    return [phasesValue];
+  }
+}
+
 // Get all projects by group_id
 async function getProjectsByGroup(groupId) {
   try {
@@ -20,7 +33,7 @@ async function getProjectsByGroup(groupId) {
     // Parse phases from JSON string to array
     const parsedData = data.map(project => ({
       ...project,
-      phases: project.phases ? JSON.parse(project.phases) : null
+      phases: parsePhases(project.phases)
     }));
     
     // ซิงค์สมาชิก LINE โดยอัตโนมัติ (เรียกเมื่อโหลดโปรเจกต์ทั้งหมด)
@@ -63,8 +76,8 @@ async function getProjectById(projectId) {
     if (error) throw error;
     
     // Parse phases from JSON string to array
-    if (data && data.phases) {
-      data.phases = JSON.parse(data.phases);
+    if (data) {
+      data.phases = parsePhases(data.phases);
     }
     
     // ซิงค์สมาชิก LINE โดยอัตโนมัติ
