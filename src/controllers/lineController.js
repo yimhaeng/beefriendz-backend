@@ -2,6 +2,16 @@ const axios = require('axios');
 
 const LINE_MESSAGING_API = 'https://api.line.me/v2/bot/message/push';
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
+const THEME = {
+  primary: '#FFA500',
+  accent: '#F59E0B',
+  danger: '#EF4444',
+  neutral: '#6B7280',
+  text: '#1F2937',
+  muted: '#6B7280',
+  background: '#F7F7F7',
+  white: '#FFFFFF'
+};
 
 /**
  * ส่ง Flex Message แจ้งโปรเจกต์ใหม่ไปยังกลุ่ม LINE
@@ -33,10 +43,10 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               text: 'โปรเจกต์ใหม่!',
               weight: 'bold',
               size: 'xl',
-              color: '#000000ff'
+              color: THEME.text
             }
           ],
-          backgroundColor: '#FFA500',
+          backgroundColor: THEME.primary,
           paddingAll: '20px'
         },
         body: {
@@ -54,7 +64,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               type: 'text',
               text: projectData.description,
               size: 'sm',
-              color: '#000000',
+              color: THEME.text,
               margin: 'md',
               wrap: true
             }] : []),
@@ -76,14 +86,14 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: 'เริ่ม:',
                       size: 'sm',
-                      color: '#555555',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: new Date(projectData.start_date).toLocaleDateString('th-TH'),
                       size: 'sm',
-                      color: '#111111',
+                      color: THEME.text,
                       align: 'end'
                     }
                   ]
@@ -96,14 +106,14 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: 'สิ้นสุด:',
                       size: 'sm',
-                      color: '#555555',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: new Date(projectData.end_date).toLocaleDateString('th-TH'),
                       size: 'sm',
-                      color: '#111111',
+                      color: THEME.text,
                       align: 'end'
                     }
                   ]
@@ -125,7 +135,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                 label: 'ดูรายละเอียดโปรเจกต์',
                 uri: projectUrl
               },
-              color: '#FFA500'
+              color: THEME.primary
             }
           ]
         }
@@ -170,15 +180,15 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     
     // สร้าง status emoji และข้อความ
     const statusConfig = {
-      'todo': { text: 'รอดำเนินการ', color: '#040000' },
-      'in_progress': { text: 'กำลังทำ', color: '#f8a720' },
-      'reviewing': { text: 'รอตรวจสอบ', color: '#f8a720' },
-      'submitted': { text: 'รอหัวหน้าอนุมัติ', color: '#f8a720' },
-      'completed': { text: 'เสร็จสิ้น', color: '#f8a720' }
+      'todo': { text: 'รอดำเนินการ', color: THEME.primary },
+      'in_progress': { text: 'กำลังทำ', color: THEME.accent },
+      'reviewing': { text: 'รอตรวจสอบ', color: THEME.accent },
+      'submitted': { text: 'รอหัวหน้าอนุมัติ', color: THEME.accent },
+      'completed': { text: 'เสร็จสิ้น', color: THEME.primary }
     };
 
-    const newStatusInfo = statusConfig[status] || { text: status, color: '#6B7280' };
-    const oldStatusInfo = statusConfig[old_status] || { text: old_status, color: '#6B7280' };
+    const newStatusInfo = statusConfig[status] || { text: status, color: THEME.neutral };
+    const oldStatusInfo = statusConfig[old_status] || { text: old_status, color: THEME.neutral };
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${project.project_id}`;
@@ -197,7 +207,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               text: `อัปเดตสถานะงาน`,
               weight: 'bold',
               size: 'lg',
-              color: '#000000ff'
+              color: THEME.text
             }
           ],
           backgroundColor: newStatusInfo.color,
@@ -213,7 +223,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               weight: 'bold',
               size: 'md',
               wrap: true,
-              color: '#1F2937'
+              color: THEME.text
             },
             {
               type: 'box',
@@ -224,7 +234,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                   type: 'text',
                   text: 'โปรเจกต์:',
                   size: 'xs',
-                  color: '#6B7280',
+                  color: THEME.muted,
                   flex: 0,
                   margin: 'none'
                 },
@@ -232,7 +242,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                   type: 'text',
                   text: project.project_name,
                   size: 'xs',
-                  color: '#374151',
+                  color: THEME.text,
                   wrap: true,
                   margin: 'sm'
                 }
@@ -256,14 +266,14 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                       type: 'text',
                       text: 'สถานะใหม่:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: `${newStatusInfo.text}`,
                       size: 'sm',
-                      color: '#000000',
+                      color: THEME.text,
                       align: 'end',
                       weight: 'bold'
                     }
@@ -278,14 +288,14 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                       type: 'text',
                       text: 'ผู้รับผิดชอบ:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: assigned_user.display_name,
                       size: 'sm',
-                      color: '#374151',
+                      color: THEME.text,
                       align: 'end'
                     }
                   ]
@@ -298,14 +308,14 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                       type: 'text',
                       text: 'อัปเดตโดย:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: updated_by_user.display_name,
                       size: 'sm',
-                      color: '#374151',
+                      color: THEME.text,
                       align: 'end'
                     }
                   ]
@@ -381,7 +391,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
       const today = new Date();
       const daysLeft = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
       
-      const urgencyColor = daysLeft <= 1 ? '#EF4444' : daysLeft <= 2 ? '#F59E0B' : '#10B981';
+      const urgencyColor = daysLeft <= 1 ? THEME.danger : daysLeft <= 2 ? THEME.accent : THEME.primary;
       const urgencyText = daysLeft <= 0 ? 'เลยเดดไลน์!' : daysLeft === 1 ? 'พรุ่งนี้!' : `อีก ${daysLeft} วัน`;
 
       return {
@@ -395,7 +405,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               text: `${urgencyText}`,
               weight: 'bold',
               size: 'lg',
-              color: '#000000ff'
+              color: THEME.text
             }
           ],
           backgroundColor: urgencyColor,
@@ -411,7 +421,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               weight: 'bold',
               size: 'md',
               wrap: true,
-              color: '#1F2937'
+              color: THEME.text
             },
             {
               type: 'box',
@@ -422,7 +432,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                   type: 'text',
                   text: task.project?.project_name || 'ไม่ระบุโปรเจกต์',
                   size: 'sm',
-                  color: '#6B7280',
+                  color: THEME.muted,
                   wrap: true,
                   margin: 'sm'
                 }
@@ -446,7 +456,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                       type: 'text',
                       text: 'เดดไลน์:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
@@ -457,7 +467,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                         day: 'numeric' 
                       }),
                       size: 'sm',
-                      color: '#374151',
+                      color: THEME.text,
                       align: 'end',
                       weight: 'bold'
                     }
@@ -471,14 +481,14 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                       type: 'text',
                       text: 'ผู้รับผิดชอบ:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: task.assigned_user.display_name,
                       size: 'sm',
-                      color: '#374151',
+                      color: THEME.text,
                       align: 'end'
                     }
                   ]
@@ -572,7 +582,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               weight: 'bold',
               size: 'xxl',
               align: 'center',
-              color: '#000000ff',
+              color: THEME.text,
               margin: 'md'
             },
             {
@@ -580,11 +590,11 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               text: 'โปรเจกต์สำเร็จ',
               size: 'md',
               align: 'center',
-              color: '#000000ff',
+              color: THEME.text,
               margin: 'sm'
             }
           ],
-          backgroundColor: '#f8a720',
+          backgroundColor: THEME.primary,
           paddingAll: '30px'
         },
         body: {
@@ -598,7 +608,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               size: 'xl',
               wrap: true,
               align: 'center',
-              color: '#f8a720'
+              color: THEME.primary
             },
             {
               type: 'separator',
@@ -618,7 +628,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: 'งานทั้งหมดเสร็จสมบูรณ์',
                       size: 'md',
-                      color: '#555555',
+                      color: THEME.muted,
                       flex: 1,
                       margin: 'md'
                     }
@@ -632,7 +642,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: `รวม ${projectData.total_tasks} งาน`,
                       size: 'md',
-                      color: '#555555',
+                      color: THEME.muted,
                       flex: 1,
                       margin: 'md'
                     }
@@ -647,7 +657,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                       type: 'text',
                       text: 'สถานะ: บรรลุเป้าหมาย',
                       size: 'md',
-                      color: '#f8a720',
+                      color: THEME.primary,
                       weight: 'bold',
                       flex: 1,
                       margin: 'md'
@@ -665,14 +675,14 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                   type: 'text',
                   text: 'ขอแสดงความยินดีกับทุกคนที่ร่วมงานกันค่ะ!',
                   wrap: true,
-                  color: '#8B8B8B',
+                  color: THEME.muted,
                   size: 'sm',
                   align: 'center'
                 }
               ],
               margin: 'xl',
               paddingAll: '10px',
-              backgroundColor: '#F7F7F7',
+              backgroundColor: THEME.background,
               cornerRadius: '10px'
             }
           ],
@@ -692,7 +702,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                 label: 'ดูรายละเอียดโปรเจกต์',
                 uri: projectUrl
               },
-              color: '#f8a720'
+              color: THEME.primary
             }
           ],
           flex: 0
@@ -961,7 +971,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                 {
                   type: 'text',
                   text: 'Workspace',
-                  color: '#ffffff',
+                  color: THEME.white,
                   size: 'xl',
                   weight: 'bold',
                   align: 'center'
@@ -969,7 +979,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                 {
                   type: 'text',
                   text: 'มาทำงานด้วยกัน!',
-                  color: '#ffffff',
+                  color: THEME.white,
                   size: 'sm',
                   align: 'center',
                   margin: 'sm'
@@ -978,7 +988,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
             }
           ],
           paddingAll: '20px',
-          backgroundColor: '#FFA500',
+          backgroundColor: THEME.primary,
           spacing: 'md',
           height: '120px',
           justifyContent: 'center'
@@ -1021,7 +1031,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                       type: 'text',
                       text: 'เริ่มทำงานแล้ว',
                       size: 'sm',
-                      color: '#999999',
+                      color: THEME.muted,
                       margin: 'sm'
                     }
                   ],
@@ -1047,7 +1057,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                       type: 'text',
                       text: task.task_name || 'Untitled Task',
                       size: 'sm',
-                      color: '#111111',
+                      color: THEME.text,
                       wrap: true,
                       margin: 'sm'
                     }
@@ -1061,7 +1071,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                       type: 'text',
                       text: project.project_name || 'Project',
                       size: 'sm',
-                      color: '#555555',
+                      color: THEME.muted,
                       wrap: true,
                       margin: 'sm'
                     }
@@ -1076,7 +1086,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                       type: 'text',
                       text: 'มาร่วมทำงานกันใน Workspace',
                       size: 'md',
-                      color: '#FFA500',
+                      color: THEME.primary,
                       weight: 'bold',
                       align: 'center',
                       wrap: true
@@ -1084,7 +1094,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   ],
                   margin: 'xl',
                   paddingAll: '12px',
-                  backgroundColor: '#FFF8E1',
+                  backgroundColor: THEME.background,
                   cornerRadius: '8px'
                 }
               ]
@@ -1104,7 +1114,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                 uri: workspaceUrl
               },
               style: 'primary',
-              color: '#FFA500',
+              color: THEME.primary,
               height: 'sm'
             }
           ],
@@ -1156,7 +1166,7 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `📅 โครงสร้างการประชุม: ${title}`,
+      altText: `โครงสร้างการประชุม: ${title}`,
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1166,13 +1176,13 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
           contents: [
             {
               type: 'text',
-              text: '📅 นัดประชุม',
+              text: 'นัดประชุม',
               weight: 'bold',
               size: 'xl',
-              color: '#FFFFFF'
+              color: THEME.text
             }
           ],
-          backgroundColor: '#6366F1',
+          backgroundColor: THEME.primary,
           paddingAll: '15px'
         },
         body: {
@@ -1185,13 +1195,13 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
               weight: 'bold',
               size: 'lg',
               wrap: true,
-              color: '#1F2937'
+              color: THEME.text
             },
             ...(description ? [{
               type: 'text',
               text: description,
               size: 'sm',
-              color: '#6B7280',
+              color: THEME.muted,
               margin: 'md',
               wrap: true
             }] : []),
@@ -1211,9 +1221,9 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '🕐 เวลา:',
+                      text: 'เวลา:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
@@ -1226,7 +1236,7 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                         minute: '2-digit'
                       }),
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       weight: 'bold',
                       align: 'end',
                       flex: 3
@@ -1239,16 +1249,16 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📍 สถานที่:',
+                      text: 'สถานที่:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: location,
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       wrap: true,
                       align: 'end',
                       flex: 3
@@ -1261,16 +1271,16 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '👥 เข้าร่วม:',
+                      text: 'เข้าร่วม:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: `${acceptedCount}/${participants ? participants.length : 0} คน`,
                       size: 'sm',
-                      color: '#10B981',
+                      color: THEME.primary,
                       weight: 'bold',
                       align: 'end',
                       flex: 3
@@ -1283,16 +1293,16 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📝 ผู้สร้าง:',
+                      text: 'ผู้สร้าง:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
                       text: creator?.display_name || 'ไม่ระบุ',
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       align: 'end',
                       flex: 3
                     }
@@ -1314,10 +1324,10 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
               height: 'sm',
               action: {
                 type: 'uri',
-                label: '🚀 เข้า Workspace',
+                label: 'เข้า Workspace',
                 uri: workspaceUrl
               },
-              color: '#6366F1'
+              color: THEME.primary
             }
           ],
         }
@@ -1371,7 +1381,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
 
     let timeText = '';
     if (minutesUntil <= 1) {
-      timeText = 'เริ่มขึ้นแล้ว! ⏰';
+      timeText = 'เริ่มขึ้นแล้ว';
     } else if (minutesUntil < 60) {
       timeText = `ใกล้เข้ามาแล้ว (อีก ${minutesUntil} นาที)`;
     } else {
@@ -1380,7 +1390,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `⏰ เตือนการประชุม: ${title}`,
+      altText: `เตือนการประชุม: ${title}`,
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1390,14 +1400,14 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
           contents: [
             {
               type: 'text',
-              text: '⏰ เตือนการประชุม',
+              text: 'เตือนการประชุม',
               weight: 'bold',
               size: 'xl',
-              color: '#FFFFFF',
+              color: THEME.white,
               align: 'center'
             }
           ],
-          backgroundColor: '#EF4444',
+          backgroundColor: THEME.danger,
           paddingAll: '15px'
         },
         body: {
@@ -1410,14 +1420,14 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
               weight: 'bold',
               size: 'lg',
               wrap: true,
-              color: '#1F2937',
+              color: THEME.text,
               align: 'center'
             },
             {
               type: 'text',
               text: timeText,
               size: 'md',
-              color: '#EF4444',
+              color: THEME.danger,
               weight: 'bold',
               margin: 'md',
               align: 'center'
@@ -1438,7 +1448,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '🕐',
+                      text: 'เวลา',
                       size: 'sm',
                       flex: 0
                     },
@@ -1449,7 +1459,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                         minute: '2-digit'
                       }),
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       weight: 'bold',
                       flex: 3
                     }
@@ -1461,7 +1471,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📍',
+                      text: 'สถานที่',
                       size: 'sm',
                       flex: 0
                     },
@@ -1469,7 +1479,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                       type: 'text',
                       text: location,
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       wrap: true,
                       flex: 3
                     }
@@ -1487,11 +1497,11 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
             {
               type: 'button',
               style: 'primary',
-              color: '#EF4444',
+              color: THEME.danger,
               height: 'sm',
               action: {
                 type: 'uri',
-                label: '🚀 เข้า Workspace เดี๋ยวนี้',
+                label: 'เข้า Workspace เดี๋ยวนี้',
                 uri: workspaceUrl
               }
             }
@@ -1539,7 +1549,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `❌ ยกเลิกการประชุม: ${title}`,
+      altText: `ยกเลิกการประชุม: ${title}`,
       contents: {
         type: 'bubble',
         header: {
@@ -1548,13 +1558,13 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
           contents: [
             {
               type: 'text',
-              text: '❌ ยกเลิกการประชุม',
+              text: 'ยกเลิกการประชุม',
               weight: 'bold',
               size: 'lg',
-              color: '#FFFFFF'
+              color: THEME.white
             }
           ],
-          backgroundColor: '#6B7280',
+          backgroundColor: THEME.neutral,
           paddingAll: '15px'
         },
         body: {
@@ -1567,7 +1577,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
               weight: 'bold',
               size: 'lg',
               wrap: true,
-              color: '#1F2937'
+              color: THEME.text
             },
             {
               type: 'box',
@@ -1581,9 +1591,9 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '🕐 เดิมประกาศ:',
+                      text: 'เดิมประกาศ:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
@@ -1596,7 +1606,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
                         minute: '2-digit'
                       }),
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       align: 'end',
                       flex: 3
                     }
@@ -1606,7 +1616,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
                   type: 'text',
                   text: 'ขออภัยค่ะ การประชุมนี้ได้ยกเลิกไปแล้ว หากมีข้อสงสัยติดต่อผู้จัด',
                   size: 'sm',
-                  color: '#6B7280',
+                  color: THEME.muted,
                   margin: 'lg',
                   wrap: true,
                   style: 'italic'
@@ -1661,7 +1671,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `🔄 เลื่อนเวลาการประชุม: ${title}`,
+      altText: `เลื่อนเวลาการประชุม: ${title}`,
       contents: {
         type: 'bubble',
         header: {
@@ -1670,13 +1680,13 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
           contents: [
             {
               type: 'text',
-              text: '🔄 เลื่อนเวลาการประชุม',
+              text: 'เลื่อนเวลาการประชุม',
               weight: 'bold',
               size: 'lg',
-              color: '#FFFFFF'
+              color: THEME.white
             }
           ],
-          backgroundColor: '#F59E0B',
+          backgroundColor: THEME.accent,
           paddingAll: '15px'
         },
         body: {
@@ -1689,13 +1699,13 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
               weight: 'bold',
               size: 'lg',
               wrap: true,
-              color: '#1F2937'
+              color: THEME.text
             },
             {
               type: 'text',
               text: 'เวลาการประชุมได้เปลี่ยนแปลงแล้ว',
               size: 'sm',
-              color: '#F59E0B',
+              color: THEME.accent,
               weight: 'bold',
               margin: 'md'
             },
@@ -1711,9 +1721,9 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
               contents: [
                 {
                   type: 'text',
-                  text: '⏱️ เวลาใหม่:',
+                  text: 'เวลาใหม่:',
                   size: 'sm',
-                  color: '#6B7280',
+                  color: THEME.muted,
                   weight: 'bold'
                 },
                 {
@@ -1723,7 +1733,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '🕐',
+                      text: 'เวลา',
                       size: 'md',
                       flex: 0
                     },
@@ -1737,7 +1747,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
                         minute: '2-digit'
                       }),
                       size: 'md',
-                      color: '#1F2937',
+                      color: THEME.text,
                       weight: 'bold',
                       wrap: true
                     }
@@ -1751,16 +1761,16 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📍 สถานที่:',
+                      text: 'สถานที่:',
                       size: 'sm',
-                      color: '#6B7280',
+                      color: THEME.muted,
                       weight: 'bold'
                     },
                     {
                       type: 'text',
                       text: location,
                       size: 'sm',
-                      color: '#1F2937',
+                      color: THEME.text,
                       wrap: true
                     }
                   ]
@@ -1777,7 +1787,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
             {
               type: 'button',
               style: 'primary',
-              color: '#F59E0B',
+              color: THEME.accent,
               height: 'sm',
               action: {
                 type: 'uri',
