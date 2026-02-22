@@ -1147,11 +1147,12 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { meeting_id, title, description, scheduled_time, location, creator, participants } = meetingData;
+    const { meeting_id, title, description, scheduled_time, location, creator, participants, group } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
     const acceptedCount = participants ? participants.filter(p => p.status === 'accepted').length : 0;
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const workspaceUrl = `${liffUrl}/workspace?groupId=${group?.group_id || ''}`;
 
     const flexMessage = {
       type: 'flex',
@@ -1314,7 +1315,7 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
               action: {
                 type: 'uri',
                 label: '🚀 เข้า Workspace',
-                uri: `${liffUrl}/workspace`
+                uri: workspaceUrl
               },
               color: '#6366F1'
             },
@@ -1367,8 +1368,10 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { meeting_id, title, scheduled_time, location } = meetingData;
+    const { meeting_id, title, scheduled_time, location, group } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const workspaceUrl = `${liffUrl}/workspace?groupId=${group?.group_id || ''}`;
 
     // คำนวณเวลาต่อไป
     const now = new Date();
@@ -1384,8 +1387,6 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
     } else {
       timeText = `อีก ${hoursUntil} ชั่วโมง`;
     }
-
-    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
 
     const flexMessage = {
       type: 'flex',
@@ -1501,7 +1502,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
               action: {
                 type: 'uri',
                 label: '🚀 เข้า Workspace เดี๋ยวนี้',
-                uri: `${liffUrl}/workspace`
+                uri: workspaceUrl
               }
             }
           ]
@@ -1662,10 +1663,11 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { title, scheduled_time, location } = meetingData;
+    const { title, scheduled_time, location, group } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const workspaceUrl = `${liffUrl}/workspace?groupId=${group?.group_id || ''}`;
 
     const flexMessage = {
       type: 'flex',
@@ -1790,7 +1792,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
               action: {
                 type: 'uri',
                 label: 'ยืนยันการเข้าร่วม',
-                uri: `${liffUrl}/workspace`
+                uri: workspaceUrl
               }
             }
           ]
