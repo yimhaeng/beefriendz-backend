@@ -1086,7 +1086,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                 label: 'เข้า Workspace',
                 uri: workspaceUrl
               },
-              style: 'primary',
+              style: 'secondary',
               color: THEME.primary,
               height: 'sm'
             }
