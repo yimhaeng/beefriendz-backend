@@ -1149,7 +1149,7 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
           contents: [
             {
               type: 'text',
-              text: 'นัดประชุม',
+              text: 'นัดหมาย',
               weight: 'bold',
               size: 'xl',
               color: THEME.text
