@@ -1138,6 +1138,691 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
   }
 }
 
+/**
+ * ส่ง Flex Message แจ้งเตือนการประชุม (เมื่อสร้างหรืออัพเดท)
+ */
+async function sendMeetingNotification(lineGroupId, meetingData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { meeting_id, title, description, scheduled_time, location, creator, participants } = meetingData;
+    const meetingDateTime = new Date(scheduled_time);
+    const acceptedCount = participants ? participants.filter(p => p.status === 'accepted').length : 0;
+
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `📅 โครงสร้างการประชุม: ${title}`,
+      contents: {
+        type: 'bubble',
+        size: 'mega',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '📅 นัดประชุม',
+              weight: 'bold',
+              size: 'xl',
+              color: '#FFFFFF'
+            }
+          ],
+          backgroundColor: '#6366F1',
+          paddingAll: '15px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: title,
+              weight: 'bold',
+              size: 'lg',
+              wrap: true,
+              color: '#1F2937'
+            },
+            ...(description ? [{
+              type: 'text',
+              text: description,
+              size: 'sm',
+              color: '#6B7280',
+              margin: 'md',
+              wrap: true
+            }] : []),
+            {
+              type: 'separator',
+              margin: 'lg'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'md',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '🕐 เวลา:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: meetingDateTime.toLocaleString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }),
+                      size: 'sm',
+                      color: '#1F2937',
+                      weight: 'bold',
+                      align: 'end',
+                      flex: 3
+                    }
+                  ]
+                },
+                ...(location ? [{
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📍 สถานที่:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: location,
+                      size: 'sm',
+                      color: '#1F2937',
+                      wrap: true,
+                      align: 'end',
+                      flex: 3
+                    }
+                  ]
+                }] : []),
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '👥 เข้าร่วม:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: `${acceptedCount}/${participants ? participants.length : 0} คน`,
+                      size: 'sm',
+                      color: '#10B981',
+                      weight: 'bold',
+                      align: 'end',
+                      flex: 3
+                    }
+                  ]
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📝 ผู้สร้าง:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: creator?.display_name || 'ไม่ระบุ',
+                      size: 'sm',
+                      color: '#1F2937',
+                      align: 'end',
+                      flex: 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          paddingAll: '20px'
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: '🚀 เข้า Workspace',
+                uri: `${liffUrl}/workspace`
+              },
+              color: '#6366F1'
+            },
+            {
+              type: 'button',
+              style: 'secondary',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: 'ดูรายละเอียด',
+                uri: `${liffUrl}/meeting/${meeting_id}`
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Meeting notification sent successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending meeting notification:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
+/**
+ * ส่ง Flex Message แจ้งเตือนการประชุมที่ใกล้จะเริ่ม (สำหรับ N8N reminder)
+ */
+async function sendMeetingReminderNotification(lineGroupId, meetingData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { meeting_id, title, scheduled_time, location } = meetingData;
+    const meetingDateTime = new Date(scheduled_time);
+
+    // คำนวณเวลาต่อไป
+    const now = new Date();
+    const timeUntil = meetingDateTime.getTime() - now.getTime();
+    const minutesUntil = Math.ceil(timeUntil / (1000 * 60));
+    const hoursUntil = Math.floor(minutesUntil / 60);
+
+    let timeText = '';
+    if (minutesUntil <= 1) {
+      timeText = 'เริ่มขึ้นแล้ว! ⏰';
+    } else if (minutesUntil < 60) {
+      timeText = `ใกล้เข้ามาแล้ว (อีก ${minutesUntil} นาที)`;
+    } else {
+      timeText = `อีก ${hoursUntil} ชั่วโมง`;
+    }
+
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `⏰ เตือนการประชุม: ${title}`,
+      contents: {
+        type: 'bubble',
+        size: 'mega',
+        hero: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '⏰ เตือนการประชุม',
+              weight: 'bold',
+              size: 'xl',
+              color: '#FFFFFF',
+              align: 'center'
+            }
+          ],
+          backgroundColor: '#EF4444',
+          paddingAll: '15px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: title,
+              weight: 'bold',
+              size: 'lg',
+              wrap: true,
+              color: '#1F2937',
+              align: 'center'
+            },
+            {
+              type: 'text',
+              text: timeText,
+              size: 'md',
+              color: '#EF4444',
+              weight: 'bold',
+              margin: 'md',
+              align: 'center'
+            },
+            {
+              type: 'separator',
+              margin: 'lg'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'md',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '🕐',
+                      size: 'sm',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: meetingDateTime.toLocaleString('th-TH', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }),
+                      size: 'sm',
+                      color: '#1F2937',
+                      weight: 'bold',
+                      flex: 3
+                    }
+                  ]
+                },
+                ...(location ? [{
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📍',
+                      size: 'sm',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: location,
+                      size: 'sm',
+                      color: '#1F2937',
+                      wrap: true,
+                      flex: 3
+                    }
+                  ]
+                }] : [])
+              ]
+            }
+          ],
+          paddingAll: '20px'
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              color: '#EF4444',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: '🚀 เข้า Workspace เดี๋ยวนี้',
+                uri: `${liffUrl}/workspace`
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Meeting reminder sent successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending meeting reminder:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
+/**
+ * ส่ง Flex Message แจ้งเตือนการยกเลิกการประชุม
+ */
+async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { title, scheduled_time } = meetingData;
+    const meetingDateTime = new Date(scheduled_time);
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `❌ ยกเลิกการประชุม: ${title}`,
+      contents: {
+        type: 'bubble',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '❌ ยกเลิกการประชุม',
+              weight: 'bold',
+              size: 'lg',
+              color: '#FFFFFF'
+            }
+          ],
+          backgroundColor: '#6B7280',
+          paddingAll: '15px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: title,
+              weight: 'bold',
+              size: 'lg',
+              wrap: true,
+              color: '#1F2937'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'md',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '🕐 เดิมประกาศ:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: meetingDateTime.toLocaleString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }),
+                      size: 'sm',
+                      color: '#1F2937',
+                      align: 'end',
+                      flex: 3
+                    }
+                  ]
+                },
+                {
+                  type: 'text',
+                  text: 'ขออภัยค่ะ การประชุมนี้ได้ยกเลิกไปแล้ว หากมีข้อสงสัยติดต่อผู้จัด',
+                  size: 'sm',
+                  color: '#6B7280',
+                  margin: 'lg',
+                  wrap: true,
+                  style: 'italic'
+                }
+              ]
+            }
+          ],
+          paddingAll: '20px'
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Meeting cancellation notification sent successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending meeting cancellation:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
+/**
+ * ส่ง Flex Message แจ้งเตือนการเลื่อนเวลาการประชุม
+ */
+async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { title, scheduled_time, location } = meetingData;
+    const meetingDateTime = new Date(scheduled_time);
+
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `🔄 เลื่อนเวลาการประชุม: ${title}`,
+      contents: {
+        type: 'bubble',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: '🔄 เลื่อนเวลาการประชุม',
+              weight: 'bold',
+              size: 'lg',
+              color: '#FFFFFF'
+            }
+          ],
+          backgroundColor: '#F59E0B',
+          paddingAll: '15px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: title,
+              weight: 'bold',
+              size: 'lg',
+              wrap: true,
+              color: '#1F2937'
+            },
+            {
+              type: 'text',
+              text: 'เวลาการประชุมได้เปลี่ยนแปลงแล้ว',
+              size: 'sm',
+              color: '#F59E0B',
+              weight: 'bold',
+              margin: 'md'
+            },
+            {
+              type: 'separator',
+              margin: 'lg'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'md',
+              contents: [
+                {
+                  type: 'text',
+                  text: '⏱️ เวลาใหม่:',
+                  size: 'sm',
+                  color: '#6B7280',
+                  weight: 'bold'
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  margin: 'md',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '🕐',
+                      size: 'md',
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: meetingDateTime.toLocaleString('th-TH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }),
+                      size: 'md',
+                      color: '#1F2937',
+                      weight: 'bold',
+                      wrap: true
+                    }
+                  ]
+                },
+                ...(location ? [{
+                  type: 'box',
+                  layout: 'vertical',
+                  margin: 'md',
+                  spacing: 'sm',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📍 สถานที่:',
+                      size: 'sm',
+                      color: '#6B7280',
+                      weight: 'bold'
+                    },
+                    {
+                      type: 'text',
+                      text: location,
+                      size: 'sm',
+                      color: '#1F2937',
+                      wrap: true
+                    }
+                  ]
+                }] : [])
+              ]
+            }
+          ],
+          paddingAll: '20px'
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              color: '#F59E0B',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: 'ยืนยันการเข้าร่วม',
+                uri: `${liffUrl}/workspace`
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Meeting reschedule notification sent successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending meeting reschedule:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
   sendTaskStatusUpdateMessage,
@@ -1147,5 +1832,9 @@ module.exports = {
   // getGroupMemberIds,
   // getGroupMemberProfile,
   getAllGroupMemberProfiles,
-  syncLineGroupMembers
+  syncLineGroupMembers,
+  sendMeetingNotification,
+  sendMeetingReminderNotification,
+  sendMeetingCancelledNotification,
+  sendMeetingRescheduleNotification
 };
