@@ -1318,18 +1318,8 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
                 uri: workspaceUrl
               },
               color: '#6366F1'
-            },
-            {
-              type: 'button',
-              style: 'secondary',
-              height: 'sm',
-              action: {
-                type: 'uri',
-                label: 'ดูรายละเอียด',
-                uri: `${liffUrl}/meeting/${meeting_id}`
-              }
             }
-          ]
+          ],
         }
       }
     };

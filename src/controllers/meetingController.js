@@ -421,6 +421,105 @@ async function updateParticipantStatus(req, res) {
   }
 }
 
+/**
+ * ส่งการแจ้งเตือนการประชุม (สำหรับ N8N Cron Job)
+ * POST /api/scheduled-meetings/send-reminders
+ * Body: { minutes: 15 } (optional, default 15)
+ */
+async function sendMeetingReminders(req, res) {
+  try {
+    const minutes = req.body?.minutes || 15;
+
+    console.log(`[Meeting Reminder] Checking for meetings in next ${minutes} minutes...`);
+
+    // Get upcoming meetings
+    const now = new Date();
+    const futureTime = new Date(now.getTime() + minutes * 60000);
+    const nowISO = now.toISOString();
+    const futureISO = futureTime.toISOString();
+
+    const { data: upcomingMeetings, error: fetchError } = await supabase
+      .from('scheduled_meetings')
+      .select(`
+        *,
+        creator:creator_id (user_id, display_name, picture_url),
+        participants:meeting_participants (
+          id,
+          user_id,
+          status,
+          user:user_id (user_id, display_name, picture_url)
+        ),
+        group:group_id (group_id, group_name, line_group_id)
+      `)
+      .eq('status', 'pending')
+      .gte('scheduled_time', nowISO)
+      .lte('scheduled_time', futureISO);
+
+    if (fetchError) {
+      console.error('[Meeting Reminder] Error fetching meetings:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch meetings' });
+    }
+
+    if (!upcomingMeetings || upcomingMeetings.length === 0) {
+      console.log('[Meeting Reminder] No upcoming meetings found');
+      return res.json({ 
+        success: true, 
+        message: 'No upcoming meetings to remind',
+        reminded: 0 
+      });
+    }
+
+    console.log(`[Meeting Reminder] Found ${upcomingMeetings.length} upcoming meetings`);
+
+    // Send reminder for each meeting with LINE group
+    let remindedCount = 0;
+    const errors = [];
+
+    for (const meeting of upcomingMeetings) {
+      try {
+        if (!meeting.group?.line_group_id) {
+          console.warn(`[Meeting Reminder] Meeting ${meeting.meeting_id} has no LINE group`);
+          errors.push(`No LINE group for meeting ${meeting.title}`);
+          continue;
+        }
+
+        console.log(`[Meeting Reminder] Sending reminder for meeting: ${meeting.title}`);
+
+        // Send LINE notification using lineController
+        const result = await lineController.sendMeetingReminderNotification(
+          meeting.group.line_group_id,
+          meeting
+        );
+
+        if (result.success) {
+          remindedCount++;
+          console.log(`[Meeting Reminder] ✅ Reminder sent for meeting ${meeting.meeting_id}`);
+        } else {
+          errors.push(`Failed to send reminder for ${meeting.title}: ${result.error}`);
+          console.error(`[Meeting Reminder] ❌ Failed to send reminder for ${meeting.meeting_id}:`, result.error);
+        }
+      } catch (err) {
+        const errorMsg = `Error processing meeting ${meeting.meeting_id}: ${err.message}`;
+        errors.push(errorMsg);
+        console.error(`[Meeting Reminder] ${errorMsg}`);
+      }
+    }
+
+    console.log(`[Meeting Reminder] Complete: reminded ${remindedCount}/${upcomingMeetings.length} meetings`);
+
+    return res.json({
+      success: true,
+      message: `Sent ${remindedCount} meeting reminders`,
+      reminded: remindedCount,
+      total: upcomingMeetings.length,
+      ...(errors.length > 0 && { errors })
+    });
+  } catch (error) {
+    console.error('[Meeting Reminder] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   createOrUpdateMeeting,
   getUpcomingMeetings,
@@ -428,5 +527,6 @@ module.exports = {
   rescheduleMeeting,
   getMeetingsByGroup,
   getMeetingDetails,
-  updateParticipantStatus
+  updateParticipantStatus,
+  sendMeetingReminders
 };

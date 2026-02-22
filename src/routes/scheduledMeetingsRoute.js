@@ -7,11 +7,15 @@ const {
   rescheduleMeeting,
   getMeetingsByGroup,
   getMeetingDetails,
-  updateParticipantStatus
+  updateParticipantStatus,
+  sendMeetingReminders
 } = require('../controllers/meetingController');
 
 // สร้าง/อัพเดท meeting
 router.post('/', createOrUpdateMeeting);
+
+// ส่งการแจ้งเตือนการประชุม (สำหรับ N8N Cron Job)
+router.post('/send-reminders', sendMeetingReminders);
 
 // ดึง meetings ที่จะเริ่มขึ้นในเวลา X นาทีข้างหน้า (สำหรับ N8N reminder)
 router.get('/upcoming', getUpcomingMeetings);
