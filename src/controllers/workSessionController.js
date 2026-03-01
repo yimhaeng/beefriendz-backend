@@ -547,9 +547,11 @@ async function updateActivityStage(req, res) {
   }
 }
 
+const SLEEP_AUTO_END_MINUTES = 30;
+
 /**
- * Check และ auto-end sessions ที่อยู่ sleep mode > 30 นาที
- * POST /api/work-sessions/check-sleep-timeout
+ * Check และ auto-end sessions ที่อยู่ sleep mode ครบ 30 นาที
+ * POST /api/work-sessions/check-auto-end-sleep
  * Body: { session_id }
  */
 async function checkAndAutoEndSleepSessions(req, res) {
@@ -573,11 +575,11 @@ async function checkAndAutoEndSleepSessions(req, res) {
       return res.status(404).json({ error: 'Session not found or already ended' });
     }
 
-    // ตรวจสอบว่า sleep > 30 นาทีหรือไม่
+    // ตรวจสอบว่า sleep ครบ 30 นาทีหรือไม่
     const lastActivityTime = new Date(session.last_activity_at || session.started_at);
     const timeDiffMinutes = (new Date() - lastActivityTime) / (1000 * 60);
 
-    if (timeDiffMinutes > 30) {
+    if (timeDiffMinutes >= SLEEP_AUTO_END_MINUTES) {
       // Auto end session
       const duration = Math.floor((new Date() - new Date(session.started_at)) / 1000);
       
@@ -608,7 +610,11 @@ async function checkAndAutoEndSleepSessions(req, res) {
       return res.json({ success: true, auto_ended: true, reason: 'sleep_timeout', session: updatedSession });
     }
 
-    res.json({ success: true, auto_ended: false, remaining_minutes: Math.round(30 - timeDiffMinutes) });
+    res.json({
+      success: true,
+      auto_ended: false,
+      remaining_minutes: Math.max(0, Math.ceil(SLEEP_AUTO_END_MINUTES - timeDiffMinutes))
+    });
   } catch (err) {
     console.error('checkAndAutoEndSleepSessions error:', err);
     res.status(500).json({ error: err.message });
