@@ -226,9 +226,23 @@ function getProjectReportHTML(data) {
     <h1>รายงานโปรเจกต์</h1>
     <div class="project-title">${escapeHtml(project?.project_name || 'โปรเจกต์ไม่มีชื่อ')}</div>
     <div class="project-meta">สร้างโดย: ${escapeHtml(project?.created_by_user?.display_name || 'ไม่ทราบ')}</div>
-    <div class="project-meta">วันที่สร้าง: ${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</div>
-    ${project?.start_date ? `<div class="project-meta">วันที่เริ่มต้น: ${new Date(project.start_date).toLocaleDateString('th-TH')}</div>` : ''}
-    ${project?.end_date ? `<div class="project-meta">วันที่สิ้นสุด: ${new Date(project.end_date).toLocaleDateString('th-TH')}</div>` : ''}
+    
+    <table style="margin-top: 15px; width: 100%;">
+      <tbody>
+        <tr style="border: none;">
+          <td style="border: none; width: 25%; padding: 5px; font-weight: bold;">วันที่สร้าง</td>
+          <td style="border: none; width: 25%; padding: 5px;">${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</td>
+          <td style="border: none; width: 25%; padding: 5px; font-weight: bold;">วันที่เริ่มต้น</td>
+          <td style="border: none; width: 25%; padding: 5px;">${project?.start_date ? new Date(project.start_date).toLocaleDateString('th-TH') : '-'}</td>
+        </tr>
+        <tr style="border: none;">
+          <td style="border: none; width: 25%; padding: 5px; font-weight: bold;">วันที่สิ้นสุด</td>
+          <td style="border: none; width: 25%; padding: 5px;">${project?.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</td>
+          <td style="border: none; width: 25%; padding: 5px;"></td>
+          <td style="border: none; width: 25%; padding: 5px;"></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="section" style="page-break-inside: avoid;">
