@@ -203,11 +203,28 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
           layout: 'vertical',
           contents: [
             {
-              type: 'text',
-              text: `อัปเดตสถานะงาน`,
-              weight: 'bold',
-              size: 'lg',
-              color: THEME.text
+              type: 'box',
+              layout: 'horizontal',
+              spacing: 'sm',
+              alignItems: 'center',
+              contents: [
+                {
+                  type: 'image',
+                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772338222/minibeeney_ixoggk.png',
+                  size: 'sm',
+                  aspectMode: 'fit',
+                  aspectRatio: '1:1',
+                  flex: 0
+                },
+                {
+                  type: 'text',
+                  text: `อัปเดตสถานะงาน`,
+                  weight: 'bold',
+                  size: 'lg',
+                  color: THEME.text,
+                  flex: 1
+                }
+              ]
             }
           ],
           backgroundColor: newStatusInfo.color,
