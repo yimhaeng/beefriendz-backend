@@ -219,7 +219,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                 {
                   type: 'image',
                   url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772340880/minibee_thdnod.png',
-                  size: 'lg',
+                  size: 'md',
                   aspectMode: 'cover',
                   flex: 0
                 }
