@@ -217,7 +217,9 @@ function getProjectReportHTML(data) {
     <h1>รายงานโปรเจกต์</h1>
     <div class="project-title">${escapeHtml(project?.project_name || 'โปรเจกต์ไม่มีชื่อ')}</div>
     <div class="project-meta">สร้างโดย: ${escapeHtml(project?.created_by_user?.display_name || 'ไม่ทราบ')}</div>
-    <div class="project-meta">วันที่: ${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</div>
+    <div class="project-meta">วันที่สร้าง: ${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</div>
+    ${project?.start_date ? `<div class="project-meta">วันที่เริ่มต้น: ${new Date(project.start_date).toLocaleDateString('th-TH')}</div>` : ''}
+    ${project?.end_date ? `<div class="project-meta">วันที่สิ้นสุด: ${new Date(project.end_date).toLocaleDateString('th-TH')}</div>` : ''}
   </div>
 
   <div class="section" style="page-break-inside: avoid;">
@@ -264,12 +266,24 @@ function getProjectReportHTML(data) {
   ${logs && logs.length > 0 ? `
   <div class="section">
     <h2>บันทึกกิจกรรม</h2>
-    ${logs.map(log => `
-      <div class="log-entry">
-        <div class="log-user">${escapeHtml(log.user?.display_name || 'ผู้ใช้ไม่ทราบ')}</div>
-        <div class="log-action log-time">${escapeHtml(log.description || log.action_type || 'อัปเดต')} ${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</div>
-      </div>
-    `).join('')}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 20%;">ผู้ใช้</th>
+          <th style="width: 50%;">กิจกรรม</th>
+          <th style="width: 30%;">เวลา</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${logs.map(log => `
+          <tr>
+            <td>${escapeHtml(log.user?.display_name || 'ผู้ใช้ไม่ทราบ')}</td>
+            <td>${escapeHtml(log.description || log.action_type || 'อัปเดต')}</td>
+            <td style="font-size: 10px;">${log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : 'ไม่ทราบ'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
   </div>
   ` : ''}
 
