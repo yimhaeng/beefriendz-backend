@@ -182,6 +182,8 @@ async function endWorkSession(req, res) {
       return res.status(400).json({ error: 'session_id is required' });
     }
 
+    console.log('[endWorkSession] Starting to end session:', session_id);
+
     // ดึงข้อมูล session
     const { data: session, error: fetchError } = await supabase
       .from('work_sessions')
@@ -189,12 +191,33 @@ async function endWorkSession(req, res) {
       .eq('session_id', session_id)
       .single();
 
-    if (fetchError || !session) {
+    if (fetchError) {
+      console.error('[endWorkSession] Error fetching session:', fetchError);
+      return res.status(404).json({ error: 'Session not found', details: fetchError.message });
+    }
+
+    if (!session) {
+      console.error('[endWorkSession] Session not found:', session_id);
       return res.status(404).json({ error: 'Session not found' });
     }
 
+    // ตรวจสอบว่า session ถูกปิดไปแล้วหรือยัง
+    if (session.ended_at) {
+      console.warn('[endWorkSession] Session already ended:', session_id);
+      return res.json({ success: true, session, message: 'Session was already ended' });
+    }
+
+    console.log('[endWorkSession] Session found:', {
+      session_id: session.session_id,
+      user_id: session.user_id,
+      task_id: session.task_id,
+      started_at: session.started_at,
+      current_status: session.status
+    });
+
     // คำนวณระยะเวลา
     const duration = Math.floor((new Date() - new Date(session.started_at)) / 1000);
+    console.log('[endWorkSession] Calculated duration:', duration, 'seconds');
 
     // อัปเดต session
     const { data: updatedSession, error: updateError } = await supabase
@@ -209,19 +232,45 @@ async function endWorkSession(req, res) {
       .single();
 
     if (updateError) {
-      console.error('Error updating session:', updateError);
-      return res.status(500).json({ error: 'Failed to end work session' });
+      console.error('[endWorkSession] Error updating session:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to end work session', 
+        details: updateError.message 
+      });
     }
 
+    if (!updatedSession) {
+      console.error('[endWorkSession] No session returned after update');
+      return res.status(500).json({ error: 'Failed to update session - no data returned' });
+    }
+
+    console.log('[endWorkSession] Session updated successfully:', {
+      session_id: updatedSession.session_id,
+      ended_at: updatedSession.ended_at,
+      duration_seconds: updatedSession.duration_seconds,
+      status: updatedSession.status
+    });
+
     // อัปเดต presence เป็น offline
-    await supabase
+    const { error: presenceError } = await supabase
       .from('workspace_presence')
-      .update({ is_online: false })
+      .update({ 
+        is_online: false,
+        activity_stage: 'offline'
+      })
       .eq('session_id', session_id);
 
+    if (presenceError) {
+      console.error('[endWorkSession] Error updating presence:', presenceError);
+      // ไม่ return error เพราะ session ถูกปิดแล้ว
+    } else {
+      console.log('[endWorkSession] Presence updated to offline');
+    }
+
+    console.log('[endWorkSession] End session completed successfully');
     res.json({ success: true, session: updatedSession });
   } catch (err) {
-    console.error('endWorkSession error:', err);
+    console.error('[endWorkSession] Unexpected error:', err);
     res.status(500).json({ error: err.message });
   }
 }
