@@ -218,9 +218,9 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                 },
                 {
                   type: 'image',
-                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772338950/minibeeney2_r2pvyo.png',
-                  size: 'sm',
-                  aspectMode: 'fit',
+                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772338222/minibeeney_ixoggk.png',
+                  size: 'md',
+                  aspectMode: 'cover',
                   aspectRatio: '1:1',
                   flex: 1
                 }
