@@ -205,7 +205,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
             {
               type: 'box',
               layout: 'horizontal',
-              spacing: 'md',
+              spacing: 'sm',
               alignItems: 'center',
               contents: [
                 {
@@ -218,16 +218,19 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                 },
                 {
                   type: 'image',
-                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772338950/minibeeney2_r2pvyo.png',
+                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772340880/minibee_thdnod.png',
                   size: 'lg',
-                  aspectMode: 'fit',
+                  aspectMode: 'cover',
                   flex: 0
                 }
               ]
             }
           ],
           backgroundColor: newStatusInfo.color,
-          paddingAll: '15px'
+          paddingStart: "15px",
+          paddingEnd: "15px",
+          paddingBottom: "0px",
+          paddingTop: "0px"
         },
         body: {
           type: 'box',
