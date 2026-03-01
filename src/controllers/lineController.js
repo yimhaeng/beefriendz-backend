@@ -209,19 +209,19 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               alignItems: 'center',
               contents: [
                 {
-                  type: 'image',
-                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772338222/minibeeney_ixoggk.png',
-                  size: 'sm',
-                  aspectMode: 'fit',
-                  aspectRatio: '1:1',
-                  flex: 0
-                },
-                {
                   type: 'text',
                   text: `อัปเดตสถานะงาน`,
                   weight: 'bold',
                   size: 'lg',
                   color: THEME.text,
+                  flex: 0
+                },
+                {
+                  type: 'image',
+                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772338950/minibeeney2_r2pvyo.png',
+                  size: 'sm',
+                  aspectMode: 'fit',
+                  aspectRatio: '1:1',
                   flex: 1
                 }
               ]
