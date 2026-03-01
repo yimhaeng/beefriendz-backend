@@ -309,6 +309,9 @@ async function getMeetingsByGroup(req, res) {
       return res.status(400).json({ error: 'groupId is required' });
     }
 
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
     const { data: meetings, error } = await supabase
       .from('scheduled_meetings')
       .select(`
@@ -323,8 +326,8 @@ async function getMeetingsByGroup(req, res) {
       `)
       .eq('group_id', groupId)
       .eq('status', 'pending')
-      .gte('scheduled_time', new Date().toISOString())
-      .order('scheduled_time', { ascending: true });
+      .gte('scheduled_time', startOfToday.toISOString())
+      .order('scheduled_time', { ascending: false });
 
     if (error) {
       console.error('[Meeting] Error fetching meetings:', error);
