@@ -229,12 +229,12 @@ function getProjectReportHTML(data) {
     
     <table style="margin-top: 15px; width: 100%; border: none;">
       <tr style="border: none;">
-        <th style="border: none; padding: 5px; font-weight: bold; width: 16.66%;">วันที่สร้าง</th>
-        <td style="border: none; padding: 5px; width: 16.66%;">${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</td>
-        <th style="border: none; padding: 5px; font-weight: bold; width: 16.66%;">วันที่เริ่มต้น</th>
-        <td style="border: none; padding: 5px; width: 16.66%;">${project?.start_date ? new Date(project.start_date).toLocaleDateString('th-TH') : '-'}</td>
-        <th style="border: none; padding: 5px; font-weight: bold; width: 16.66%;">วันที่สิ้นสุด</th>
-        <td style="border: none; padding: 5px; width: 16.66%;">${project?.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</td>
+        <th style="padding: 5px; font-weight: bold; width: 16.66%;">วันที่สร้าง</th>
+        <td style="padding: 5px; width: 16.66%;">${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</td>
+        <th style="padding: 5px; font-weight: bold; width: 16.66%;">วันที่เริ่มต้น</th>
+        <td style="padding: 5px; width: 16.66%;">${project?.start_date ? new Date(project.start_date).toLocaleDateString('th-TH') : '-'}</td>
+        <th style="padding: 5px; font-weight: bold; width: 16.66%;">วันที่สิ้นสุด</th>
+        <td style="padding: 5px; width: 16.66%;">${project?.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</td>
       </tr>
     </table>
   </div>
