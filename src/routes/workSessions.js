@@ -3,6 +3,8 @@ const router = express.Router();
 const {
   startWorkSession,
   endWorkSession,
+  pauseWorkSession,
+  resumeWorkSession,
   getActiveSessions,
   getActivePresence,
   updatePresence,
@@ -17,6 +19,12 @@ router.post('/start', startWorkSession);
 
 // จบ work session
 router.post('/end', endWorkSession);
+
+// หยุดพัก (Pause) work session
+router.post('/pause', pauseWorkSession);
+
+// กลับมาทำต่อ (Resume) work session
+router.post('/resume', resumeWorkSession);
 
 // ดึงข้อมูล active sessions ทั้งหมด
 router.get('/active', getActiveSessions);

@@ -4,14 +4,18 @@ const lineController = require('./lineController');
 /**
  * เริ่ม work session ใหม่
  * POST /api/work-sessions/start
- * Body: { user_id, task_id }
+ * Body: { user_id, task_id, planned_duration }
  */
 async function startWorkSession(req, res) {
   try {
-    const { user_id, task_id } = req.body;
+    const { user_id, task_id, planned_duration } = req.body;
 
     if (!user_id || !task_id) {
       return res.status(400).json({ error: 'user_id and task_id are required' });
+    }
+
+    if (!planned_duration || planned_duration <= 0) {
+      return res.status(400).json({ error: 'planned_duration (minutes) is required and must be positive' });
     }
 
     // ตรวจสอบว่า user มี session ที่ active อยู่แล้วหรือไม่
@@ -97,7 +101,10 @@ async function startWorkSession(req, res) {
         task_id,
         started_at: new Date().toISOString(),
         status: 'active',
-        last_activity_at: new Date().toISOString()
+        last_activity_at: new Date().toISOString(),
+        planned_duration,
+        pause_duration_seconds: 0,
+        actual_duration_seconds: 0
       })
       .select()
       .single();
@@ -219,12 +226,18 @@ async function endWorkSession(req, res) {
     const duration = Math.floor((new Date() - new Date(session.started_at)) / 1000);
     console.log('[endWorkSession] Calculated duration:', duration, 'seconds');
 
+    // คำนวณ actual_duration (เวลาทำงานจริง = total duration - pause duration)
+    const pauseDuration = session.pause_duration_seconds || 0;
+    const actualDuration = Math.max(0, duration - pauseDuration);
+    console.log('[endWorkSession] Actual duration (excluding pauses):', actualDuration, 'seconds');
+
     // อัปเดต session
     const { data: updatedSession, error: updateError } = await supabase
       .from('work_sessions')
       .update({
         ended_at: new Date().toISOString(),
         duration_seconds: duration,
+        actual_duration_seconds: actualDuration,
         status: 'completed'
       })
       .eq('session_id', session_id)
@@ -547,6 +560,141 @@ async function updateActivityStage(req, res) {
   }
 }
 
+/**
+ * หยุดพัก (Pause) work session
+ * POST /api/work-sessions/pause
+ * Body: { session_id }
+ */
+async function pauseWorkSession(req, res) {
+  try {
+    const { session_id } = req.body;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+
+    // ดึงข้อมูล session
+    const { data: session, error: fetchError } = await supabase
+      .from('work_sessions')
+      .select('*')
+      .eq('session_id', session_id)
+      .single();
+
+    if (fetchError || !session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // ตรวจสอบว่า session ยังไม่จบและไม่ได้พักอยู่แล้ว
+    if (session.ended_at) {
+      return res.status(400).json({ error: 'Session already ended' });
+    }
+
+    if (session.paused_at) {
+      return res.status(400).json({ error: 'Session is already paused' });
+    }
+
+    // บันทึกเวลาที่หยุดพัก
+    const { data: updatedSession, error: updateError } = await supabase
+      .from('work_sessions')
+      .update({
+        paused_at: new Date().toISOString()
+      })
+      .eq('session_id', session_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error pausing session:', updateError);
+      return res.status(500).json({ error: 'Failed to pause session' });
+    }
+
+    // อัปเดต presence เป็น sleep
+    await supabase
+      .from('workspace_presence')
+      .update({ 
+        activity_stage: 'sleep',
+        last_active: new Date().toISOString()
+      })
+      .eq('session_id', session_id);
+
+    res.json({ success: true, session: updatedSession });
+  } catch (err) {
+    console.error('pauseWorkSession error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+/**
+ * กลับมาทำต่อ (Resume) work session
+ * POST /api/work-sessions/resume
+ * Body: { session_id }
+ */
+async function resumeWorkSession(req, res) {
+  try {
+    const { session_id } = req.body;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+
+    // ดึงข้อมูล session
+    const { data: session, error: fetchError } = await supabase
+      .from('work_sessions')
+      .select('*')
+      .eq('session_id', session_id)
+      .single();
+
+    if (fetchError || !session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // ตรวจสอบว่า session กำลังพักอยู่
+    if (!session.paused_at) {
+      return res.status(400).json({ error: 'Session is not paused' });
+    }
+
+    if (session.ended_at) {
+      return res.status(400).json({ error: 'Session already ended' });
+    }
+
+    // คำนวณเวลาที่พักไป
+    const pausedDuration = Math.floor((new Date() - new Date(session.paused_at)) / 1000);
+    const totalPauseDuration = (session.pause_duration_seconds || 0) + pausedDuration;
+
+    // อัปเดต session
+    const { data: updatedSession, error: updateError } = await supabase
+      .from('work_sessions')
+      .update({
+        paused_at: null,
+        pause_duration_seconds: totalPauseDuration,
+        last_activity_at: new Date().toISOString()
+      })
+      .eq('session_id', session_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error resuming session:', updateError);
+      return res.status(500).json({ error: 'Failed to resume session' });
+    }
+
+    // อัปเดต presence เป็น active
+    await supabase
+      .from('workspace_presence')
+      .update({ 
+        activity_stage: 'active',
+        is_online: true,
+        last_active: new Date().toISOString()
+      })
+      .eq('session_id', session_id);
+
+    res.json({ success: true, session: updatedSession });
+  } catch (err) {
+    console.error('resumeWorkSession error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 const SLEEP_AUTO_END_MINUTES = 30;
 
 /**
@@ -624,6 +772,8 @@ async function checkAndAutoEndSleepSessions(req, res) {
 module.exports = {
   startWorkSession,
   endWorkSession,
+  pauseWorkSession,
+  resumeWorkSession,
   getActiveSessions,
   getActivePresence,
   updatePresence,

@@ -1460,23 +1460,6 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
           ],
           paddingAll: '20px'
         },
-        footer: {
-          type: 'box',
-          layout: 'vertical',
-          contents: [
-            {
-              type: 'button',
-              style: 'primary',
-              color: THEME.danger,
-              height: 'sm',
-              action: {
-                type: 'uri',
-                label: 'เข้า Workspace เดี๋ยวนี้',
-                uri: workspaceUrl
-              }
-            }
-          ]
-        }
       }
     };
 
