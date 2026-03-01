@@ -308,7 +308,7 @@ async function updateTask(taskId, taskData) {
         task_id: taskId,
         user_id: updated_by || oldTask.assigned_to,
         action_type: 'status_change',
-        description: `เปลี่ยนสถานะจาก ${oldTask.status} เป็น ${taskData.status}`,
+        description: `"${oldTask.task_name}": เปลี่ยนสถานะจาก ${oldTask.status} เป็น ${taskData.status}`,
         old_value: oldTask.status,
         new_value: taskData.status,
       };
