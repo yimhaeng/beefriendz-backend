@@ -227,21 +227,15 @@ function getProjectReportHTML(data) {
     <div class="project-title">${escapeHtml(project?.project_name || 'โปรเจกต์ไม่มีชื่อ')}</div>
     <div class="project-meta">สร้างโดย: ${escapeHtml(project?.created_by_user?.display_name || 'ไม่ทราบ')}</div>
     
-    <table style="margin-top: 15px; width: 100%;">
-      <tbody>
-        <tr style="border: none;">
-          <td style="border: none; width: 25%; padding: 5px; font-weight: bold;">วันที่สร้าง</td>
-          <td style="border: none; width: 25%; padding: 5px;">${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</td>
-          <td style="border: none; width: 25%; padding: 5px; font-weight: bold;">วันที่เริ่มต้น</td>
-          <td style="border: none; width: 25%; padding: 5px;">${project?.start_date ? new Date(project.start_date).toLocaleDateString('th-TH') : '-'}</td>
-        </tr>
-        <tr style="border: none;">
-          <td style="border: none; width: 25%; padding: 5px; font-weight: bold;">วันที่สิ้นสุด</td>
-          <td style="border: none; width: 25%; padding: 5px;">${project?.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</td>
-          <td style="border: none; width: 25%; padding: 5px;"></td>
-          <td style="border: none; width: 25%; padding: 5px;"></td>
-        </tr>
-      </tbody>
+    <table style="margin-top: 15px; width: 100%; border: none;">
+      <tr style="border: none;">
+        <th style="border: none; padding: 5px; font-weight: bold; width: 16.66%;">วันที่สร้าง</th>
+        <td style="border: none; padding: 5px; width: 16.66%;">${project?.created_at ? new Date(project.created_at).toLocaleDateString('th-TH') : 'ไม่ทราบ'}</td>
+        <th style="border: none; padding: 5px; font-weight: bold; width: 16.66%;">วันที่เริ่มต้น</th>
+        <td style="border: none; padding: 5px; width: 16.66%;">${project?.start_date ? new Date(project.start_date).toLocaleDateString('th-TH') : '-'}</td>
+        <th style="border: none; padding: 5px; font-weight: bold; width: 16.66%;">วันที่สิ้นสุด</th>
+        <td style="border: none; padding: 5px; width: 16.66%;">${project?.end_date ? new Date(project.end_date).toLocaleDateString('th-TH') : '-'}</td>
+      </tr>
     </table>
   </div>
 
