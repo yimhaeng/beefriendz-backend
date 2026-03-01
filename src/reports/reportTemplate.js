@@ -200,6 +200,15 @@ function getProjectReportHTML(data) {
       font-weight: bold;
     }
 
+    tbody tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
     .footer {
       text-align: center;
       margin-top: 40px;

@@ -10,6 +10,8 @@ async function getProjectReportData(projectId) {
       project_name,
       description,
       created_at,
+      start_date,
+      end_date,
       phases,
       group_id,
       created_by_user:users(display_name, picture_url)
