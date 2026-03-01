@@ -1460,6 +1460,23 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
           ],
           paddingAll: '20px'
         },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              color: THEME.danger,
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: 'เข้า Workspace เดี๋ยวนี้',
+                uri: workspaceUrl
+              }
+            }
+          ]
+        }
       }
     };
 
@@ -1778,12 +1795,222 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
   }
 }
 
+/**
+ * ส่ง Flex Message แจ้งเตือนเมื่อหมดเวลา Timebox
+ */
+async function sendTimeUpNotification(lineGroupId, sessionData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const { user, task, project, duration } = sessionData;
+    
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const workspaceUrl = `${liffUrl}/workspace?groupId=${project.group_id}`;
+
+    // Format duration
+    const formatDuration = (minutes) => {
+      if (minutes < 60) return `${minutes} นาที`;
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hours} ชั่วโมง ${mins} นาที` : `${hours} ชั่วโมง`;
+    };
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `⏰ ${user.display_name || 'สมาชิก'} ทำงานครบเวลาที่ตั้งไว้แล้ว!`,
+      contents: {
+        type: 'bubble',
+        size: 'mega',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                {
+                  type: 'text',
+                  text: "⏰ Time's Up!",
+                  color: '#ffffff',
+                  size: 'xl',
+                  weight: 'bold',
+                  flex: 1
+                }
+              ]
+            }
+          ],
+          backgroundColor: '#FDB456',
+          paddingAll: '20px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '👤',
+                      size: 'sm',
+                      color: '#555555',
+                      flex: 0,
+                      margin: 'md'
+                    },
+                    {
+                      type: 'text',
+                      text: user.display_name || 'สมาชิก',
+                      size: 'sm',
+                      color: '#111111',
+                      flex: 5,
+                      weight: 'bold',
+                      wrap: true
+                    }
+                  ]
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '📝',
+                      size: 'sm',
+                      color: '#555555',
+                      flex: 0,
+                      margin: 'md'
+                    },
+                    {
+                      type: 'text',
+                      text: task.task_name || 'Untitled Task',
+                      size: 'sm',
+                      color: '#111111',
+                      flex: 5,
+                      wrap: true
+                    }
+                  ]
+                },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '⏱️',
+                      size: 'sm',
+                      color: '#555555',
+                      flex: 0,
+                      margin: 'md'
+                    },
+                    {
+                      type: 'text',
+                      text: `Focused for ${formatDuration(duration)}`,
+                      size: 'sm',
+                      color: '#111111',
+                      flex: 5
+                    }
+                  ]
+                },
+                {
+                  type: 'separator',
+                  margin: 'lg'
+                },
+                {
+                  type: 'box',
+                  layout: 'vertical',
+                  margin: 'lg',
+                  spacing: 'sm',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '🎉 Great job on completing the focus session!',
+                      size: 'sm',
+                      color: '#666666',
+                      wrap: true,
+                      align: 'center'
+                    },
+                    {
+                      type: 'text',
+                      text: 'Time to update your progress.',
+                      size: 'xs',
+                      color: '#999999',
+                      wrap: true,
+                      align: 'center',
+                      margin: 'sm'
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              height: 'sm',
+              action: {
+                type: 'uri',
+                label: '📊 View Workspace',
+                uri: workspaceUrl
+              },
+              color: '#FDB456'
+            }
+          ],
+          flex: 0
+        }
+      }
+    };
+
+    console.log('[LINE] Sending time up notification to group:', lineGroupId);
+    
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Time up notification sent successfully');
+    return { success: true, data: response.data };
+
+  } catch (error) {
+    console.error('[LINE] Error sending time up notification:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
 module.exports = {
   sendProjectCreatedMessage,
   sendTaskStatusUpdateMessage,
   sendDeadlineReminder,
   sendProjectCompletedMessage,
   sendWorkspaceInviteMessage,
+  sendTimeUpNotification,
   // getGroupMemberIds,
   // getGroupMemberProfile,
   getAllGroupMemberProfiles,

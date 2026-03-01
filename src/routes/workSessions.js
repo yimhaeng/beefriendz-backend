@@ -11,7 +11,8 @@ const {
   getUserSessionHistory,
   getUserSessionStats,
   updateActivityStage,
-  checkAndAutoEndSleepSessions
+  checkAndAutoEndSleepSessions,
+  checkAndNotifyTimeUp
 } = require('../controllers/workSessionController');
 
 // เริ่ม work session
@@ -46,5 +47,8 @@ router.post('/update-stage', updateActivityStage);
 
 // ตรวจสอบและจบ sleep sessions ที่หมดเวลา
 router.post('/check-auto-end-sleep', checkAndAutoEndSleepSessions);
+
+// ตรวจสอบและแจ้งเตือนเมื่อ timebox หมดเวลา
+router.post('/check-timeup', checkAndNotifyTimeUp);
 
 module.exports = router;

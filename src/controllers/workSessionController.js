@@ -769,6 +769,105 @@ async function checkAndAutoEndSleepSessions(req, res) {
   }
 }
 
+/**
+ * ตรวจสอบและแจ้งเตือนเมื่อ timebox หมดเวลา
+ * POST /api/work-sessions/check-timeup
+ * Body: { session_id }
+ */
+async function checkAndNotifyTimeUp(req, res) {
+  try {
+    const { session_id } = req.body;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+
+    // ดึงข้อมูล session พร้อมรายละเอียด
+    const { data: session, error: fetchError } = await supabase
+      .from('work_sessions')
+      .select(`
+        *,
+        user:user_id (user_id, display_name, picture_url),
+        task:task_id (
+          task_id,
+          task_name,
+          description,
+          project:project_id (
+            project_id,
+            project_name,
+            group_id,
+            groups:group_id (group_id, line_group_id)
+          )
+        )
+      `)
+      .eq('session_id', session_id)
+      .eq('status', 'active')
+      .is('ended_at', null)
+      .single();
+
+    if (fetchError || !session) {
+      return res.status(404).json({ error: 'Active session not found' });
+    }
+
+    // ตรวจสอบว่ามี planned_duration หรือไม่
+    if (!session.planned_duration) {
+      return res.json({ success: true, time_up: false, message: 'No timebox set' });
+    }
+
+    // คำนวณเวลาที่เหลือ
+    const startedAt = new Date(session.started_at).getTime();
+    const plannedSeconds = session.planned_duration * 60;
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    const pauseDuration = session.pause_duration_seconds || 0;
+    const actualElapsed = elapsed - pauseDuration;
+    const remaining = plannedSeconds - actualElapsed;
+
+    // ถ้ายังไม่หมดเวลา
+    if (remaining > 0) {
+      return res.json({
+        success: true,
+        time_up: false,
+        remaining_seconds: remaining
+      });
+    }
+
+    // หมดเวลาแล้ว - ส่ง notification
+    console.log('[checkAndNotifyTimeUp] Time is up for session:', session_id);
+
+    // ส่ง LINE notification
+    if (session.task?.project?.groups?.line_group_id) {
+      const lineGroupId = session.task.project.groups.line_group_id;
+      
+      // ส่ง notification แบบ async
+      lineController.sendTimeUpNotification(lineGroupId, {
+        user: session.user,
+        task: session.task,
+        project: session.task.project,
+        duration: session.planned_duration
+      }).then(result => {
+        if (result.success) {
+          console.log('[checkAndNotifyTimeUp] LINE notification sent successfully');
+        } else {
+          console.warn('[checkAndNotifyTimeUp] LINE notification failed:', result.error);
+        }
+      }).catch(err => {
+        console.error('[checkAndNotifyTimeUp] LINE notification error:', err);
+      });
+    }
+
+    res.json({
+      success: true,
+      time_up: true,
+      elapsed_seconds: actualElapsed,
+      planned_seconds: plannedSeconds
+    });
+
+  } catch (err) {
+    console.error('checkAndNotifyTimeUp error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   startWorkSession,
   endWorkSession,
@@ -779,6 +878,7 @@ module.exports = {
   updatePresence,
   updateActivityStage,
   checkAndAutoEndSleepSessions,
+  checkAndNotifyTimeUp,
   getUserSessionHistory,
   getUserSessionStats
 };
