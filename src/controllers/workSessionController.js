@@ -76,7 +76,7 @@ async function startWorkSession(req, res) {
             .from('work_sessions')
             .update({
               ended_at: new Date().toISOString(),
-              duration_seconds: duration,
+              actual_duration_seconds: duration,
               status: 'completed'
             })
             .eq('session_id', session.session_id);
@@ -236,7 +236,6 @@ async function endWorkSession(req, res) {
       .from('work_sessions')
       .update({
         ended_at: new Date().toISOString(),
-        duration_seconds: duration,
         actual_duration_seconds: actualDuration,
         status: 'completed'
       })
@@ -260,7 +259,7 @@ async function endWorkSession(req, res) {
     console.log('[endWorkSession] Session updated successfully:', {
       session_id: updatedSession.session_id,
       ended_at: updatedSession.ended_at,
-      duration_seconds: updatedSession.duration_seconds,
+      actual_duration_seconds: updatedSession.actual_duration_seconds,
       status: updatedSession.status
     });
 
@@ -472,7 +471,7 @@ async function getUserSessionStats(req, res) {
 
     let query = supabase
       .from('work_sessions')
-      .select('duration_seconds, status')
+      .select('status, actual_duration_seconds')
       .eq('user_id', userId);
 
     if (dateFilter) {
@@ -490,7 +489,7 @@ async function getUserSessionStats(req, res) {
     // คำนวณสถิติ
     const totalSessions = sessions.length;
     const completedSessions = sessions.filter(s => s.status === 'completed').length;
-    const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
+    const totalSeconds = sessions.reduce((sum, s) => sum + (s.actual_duration_seconds || 0), 0);
     const totalHours = (totalSeconds / 3600).toFixed(2);
     const avgSessionMinutes = totalSessions > 0 
       ? ((totalSeconds / totalSessions) / 60).toFixed(2) 
@@ -735,7 +734,7 @@ async function checkAndAutoEndSleepSessions(req, res) {
         .from('work_sessions')
         .update({
           ended_at: new Date().toISOString(),
-          duration_seconds: duration,
+          actual_duration_seconds: duration,
           status: 'completed'
         })
         .eq('session_id', session_id)
