@@ -1819,30 +1819,23 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `⏰ ${user.display_name || 'สมาชิก'} ทำงานครบเวลาที่ตั้งไว้แล้ว!`,
+      altText: `${user.display_name || 'สมาชิก'} ทำงานครบเวลาที่ตั้งไว้แล้ว`,
       contents: {
         type: 'bubble',
         size: 'mega',
-        header: {
+        hero: {
           type: 'box',
           layout: 'vertical',
           contents: [
             {
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                {
-                  type: 'text',
-                  text: "⏰ Time's Up!",
-                  color: '#ffffff',
-                  size: 'xl',
-                  weight: 'bold',
-                  flex: 1
-                }
-              ]
+              type: 'text',
+              text: 'Focus Session Complete',
+              weight: 'bold',
+              size: 'xl',
+              color: THEME.text
             }
           ],
-          backgroundColor: '#FDB456',
+          backgroundColor: THEME.primary,
           paddingAll: '20px'
         },
         body: {
@@ -1850,10 +1843,29 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
           layout: 'vertical',
           contents: [
             {
+              type: 'text',
+              text: task.task_name || 'Untitled Task',
+              weight: 'bold',
+              size: 'lg',
+              wrap: true,
+              color: THEME.text
+            },
+            {
+              type: 'text',
+              text: `โดย ${user.display_name || 'สมาชิก'}`,
+              size: 'sm',
+              color: THEME.muted,
+              margin: 'sm'
+            },
+            {
+              type: 'separator',
+              margin: 'lg'
+            },
+            {
               type: 'box',
               layout: 'vertical',
               margin: 'lg',
-              spacing: 'sm',
+              spacing: 'md',
               contents: [
                 {
                   type: 'box',
@@ -1861,20 +1873,19 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '👤',
+                      text: 'ระยะเวลา',
                       size: 'sm',
-                      color: '#555555',
-                      flex: 0,
-                      margin: 'md'
+                      color: THEME.muted,
+                      flex: 0
                     },
                     {
                       type: 'text',
-                      text: user.display_name || 'สมาชิก',
+                      text: formatDuration(duration),
                       size: 'sm',
-                      color: '#111111',
-                      flex: 5,
-                      weight: 'bold',
-                      wrap: true
+                      color: THEME.text,
+                      align: 'end',
+                      flex: 3,
+                      weight: 'bold'
                     }
                   ]
                 },
@@ -1884,75 +1895,43 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
                   contents: [
                     {
                       type: 'text',
-                      text: '📝',
+                      text: 'โปรเจกต์',
                       size: 'sm',
-                      color: '#555555',
-                      flex: 0,
-                      margin: 'md'
+                      color: THEME.muted,
+                      flex: 0
                     },
                     {
                       type: 'text',
-                      text: task.task_name || 'Untitled Task',
+                      text: project.project_name || 'Project',
                       size: 'sm',
-                      color: '#111111',
-                      flex: 5,
-                      wrap: true
-                    }
-                  ]
-                },
-                {
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '⏱️',
-                      size: 'sm',
-                      color: '#555555',
-                      flex: 0,
-                      margin: 'md'
-                    },
-                    {
-                      type: 'text',
-                      text: `Focused for ${formatDuration(duration)}`,
-                      size: 'sm',
-                      color: '#111111',
-                      flex: 5
-                    }
-                  ]
-                },
-                {
-                  type: 'separator',
-                  margin: 'lg'
-                },
-                {
-                  type: 'box',
-                  layout: 'vertical',
-                  margin: 'lg',
-                  spacing: 'sm',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '🎉 Great job on completing the focus session!',
-                      size: 'sm',
-                      color: '#666666',
+                      color: THEME.text,
+                      align: 'end',
                       wrap: true,
-                      align: 'center'
-                    },
-                    {
-                      type: 'text',
-                      text: 'Time to update your progress.',
-                      size: 'xs',
-                      color: '#999999',
-                      wrap: true,
-                      align: 'center',
-                      margin: 'sm'
+                      flex: 3
                     }
                   ]
                 }
               ]
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              paddingAll: '12px',
+              backgroundColor: THEME.background,
+              cornerRadius: '12px',
+              contents: [
+                {
+                  type: 'text',
+                  text: 'อัปเดตสถานะงานใน Workspace เพื่อบันทึกความคืบหน้า',
+                  size: 'xs',
+                  color: THEME.muted,
+                  wrap: true,
+                  align: 'center'
+                }
+              ]
             }
-          ]
+          ],
+          paddingAll: '20px'
         },
         footer: {
           type: 'box',
@@ -1965,13 +1944,13 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
               height: 'sm',
               action: {
                 type: 'uri',
-                label: '📊 View Workspace',
+                label: 'เปิด Workspace',
                 uri: workspaceUrl
               },
-              color: '#FDB456'
+              color: THEME.primary
             }
           ],
-          flex: 0
+          paddingAll: '20px'
         }
       }
     };
