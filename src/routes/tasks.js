@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const projectController = require('../controllers/projectController');
+const groupController = require('../controllers/groupController');
 const lineController = require('../controllers/lineController');
 
 // ========== TASK ROUTES ==========
@@ -159,6 +160,27 @@ router.post('/', async (req, res) => {
       action_type: 'created',
       description: `สร้างงาน "${req.body.task_name}"`,
     });
+
+    // ส่ง Flex Message ไปยังกลุ่ม LINE (เหมือนตอนสร้างโปรเจกต์)
+    try {
+      const projectResult = await projectController.getProjectById(req.body.project_id);
+      if (projectResult.success && projectResult.data?.group_id) {
+        const groupResult = await groupController.getGroupById(projectResult.data.group_id);
+        if (groupResult.success && groupResult.data?.line_group_id) {
+          await lineController.sendTaskCreatedMessage(
+            groupResult.data.line_group_id,
+            {
+              ...result.data,
+              project_id: projectResult.data.project_id,
+              project_name: projectResult.data.project_name
+            }
+          );
+        }
+      }
+    } catch (err) {
+      console.error('[POST /api/tasks] Error sending LINE message:', err.message);
+      // ไม่ throw เพราะ task ถูกสร้างสำเร็จแล้ว
+    }
     
     res.status(201).json(result.data);
   } else {

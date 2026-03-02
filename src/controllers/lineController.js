@@ -168,6 +168,166 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
 }
 
 /**
+ * ส่ง Flex Message แจ้งงานใหม่ไปยังกลุ่ม LINE
+ */
+async function sendTaskCreatedMessage(lineGroupId, taskData) {
+  try {
+    if (!LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
+    }
+
+    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+    const projectUrl = `${liffUrl}/projectdetail/${taskData.project_id}`;
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `สร้างงาน "${taskData.task_name}" สำเร็จ!`,
+      contents: {
+        type: 'bubble',
+        hero: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: 'งานใหม่!',
+              weight: 'bold',
+              size: 'xl',
+              color: THEME.text
+            }
+          ],
+          backgroundColor: THEME.accent,
+          paddingAll: '20px'
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: taskData.task_name || 'ไม่ระบุชื่องาน',
+              weight: 'bold',
+              size: 'lg',
+              wrap: true,
+              color: THEME.text
+            },
+            ...(taskData.project_name ? [{
+              type: 'text',
+              text: `โปรเจกต์: ${taskData.project_name}`,
+              size: 'sm',
+              color: THEME.muted,
+              margin: 'md',
+              wrap: true
+            }] : []),
+            ...(taskData.description ? [{
+              type: 'text',
+              text: taskData.description,
+              size: 'sm',
+              color: THEME.text,
+              margin: 'md',
+              wrap: true
+            }] : []),
+            {
+              type: 'separator',
+              margin: 'lg'
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              margin: 'lg',
+              spacing: 'sm',
+              contents: [
+                ...(taskData.deadline ? [{
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: 'เดดไลน์:',
+                      size: 'sm',
+                      color: THEME.muted,
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: new Date(taskData.deadline).toLocaleDateString('th-TH'),
+                      size: 'sm',
+                      color: THEME.text,
+                      align: 'end',
+                      weight: 'bold'
+                    }
+                  ]
+                }] : []),
+                ...(taskData.priority ? [{
+                  type: 'box',
+                  layout: 'horizontal',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: 'ความสำคัญ:',
+                      size: 'sm',
+                      color: THEME.muted,
+                      flex: 0
+                    },
+                    {
+                      type: 'text',
+                      text: String(taskData.priority),
+                      size: 'sm',
+                      color: THEME.text,
+                      align: 'end'
+                    }
+                  ]
+                }] : [])
+              ]
+            }
+          ]
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'secondary',
+              action: {
+                type: 'uri',
+                label: 'ดูโปรเจกต์',
+                uri: projectUrl
+              },
+              color: THEME.accent
+            }
+          ]
+        }
+      }
+    };
+
+    const response = await axios.post(
+      LINE_MESSAGING_API,
+      {
+        to: lineGroupId,
+        messages: [flexMessage]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log('[LINE] Task created message sent successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('[LINE] Error sending task created message:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
+
+/**
  * ส่ง Flex Message แจ้งเตือนการเปลี่ยนสถานะงาน
  */
 async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
@@ -1985,6 +2145,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
 
 module.exports = {
   sendProjectCreatedMessage,
+  sendTaskCreatedMessage,
   sendTaskStatusUpdateMessage,
   sendDeadlineReminder,
   sendProjectCompletedMessage,
