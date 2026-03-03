@@ -343,7 +343,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
       'todo': { text: 'รอดำเนินการ', color: THEME.primary },
       'in_progress': { text: 'กำลังทำ', color: THEME.accent },
       'reviewing': { text: 'รอตรวจสอบ', color: THEME.accent },
-      'submitted': { text: 'รอหัวหน้าอนุมัติ', color: THEME.accent },
+      'submitted': { text: 'รอหัวหน้าตรวจสอบ', color: THEME.accent },
       'completed': { text: 'เสร็จสิ้น', color: THEME.primary }
     };
 
