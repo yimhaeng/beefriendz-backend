@@ -31,7 +31,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `สร้างโปรเจกต์ "${projectData.project_name}" สำเร็จ!`,
+      altText: `รังใหม่พร้อมลุย! 🍯 สร้างโปรเจกต์ "${projectData.project_name}" แล้วค่า`,
       contents: {
         type: 'bubble',
         hero: {
@@ -40,7 +40,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
           contents: [
             {
               type: 'text',
-              text: 'โปรเจกต์ใหม่!',
+              text: 'โปรเจกต์ใหม่เข้า!',
               weight: 'bold',
               size: 'xl',
               color: THEME.text
@@ -84,7 +84,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'เริ่ม:',
+                      text: 'เริ่มปั่น:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -104,7 +104,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'สิ้นสุด:',
+                      text: 'เดดไลน์ที่รัก:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -132,7 +132,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               style: 'secondary',
               action: {
                 type: 'uri',
-                label: 'ดูรายละเอียดโปรเจกต์',
+                label: 'แวะไปดูรังใหม่กันหน่อย',
                 uri: projectUrl
               },
               color: THEME.primary
@@ -181,7 +181,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `สร้างงาน "${taskData.task_name}" สำเร็จ!`,
+      altText: `มีงานงอกจ้า 🐝 สร้างงาน "${taskData.task_name}" แล้ว`,
       contents: {
         type: 'bubble',
         hero: {
@@ -190,7 +190,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
           contents: [
             {
               type: 'text',
-              text: 'งานใหม่!',
+              text: 'งานใหม่มาละน้องๆ!',
               weight: 'bold',
               size: 'xl',
               color: THEME.text
@@ -243,7 +243,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'เดดไลน์:',
+                      text: 'ต้องเสร็จก่อน:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -264,7 +264,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'ความสำคัญ:',
+                      text: 'ความสําคัญ:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -292,7 +292,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
               style: 'secondary',
               action: {
                 type: 'uri',
-                label: 'ดูโปรเจกต์',
+                label: 'ไปรับกรรมด่วน',
                 uri: projectUrl
               },
               color: THEME.accent
@@ -340,11 +340,11 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     
     // สร้าง status emoji และข้อความ
     const statusConfig = {
-      'todo': { text: 'รอดำเนินการ', color: THEME.primary },
-      'in_progress': { text: 'กำลังทำ', color: THEME.accent },
+      'todo': { text: 'กองไว้ก่อน', color: THEME.primary },
+      'in_progress': { text: 'กำลังปั่นไฟลุก', color: THEME.accent },
       'reviewing': { text: 'รอตรวจสอบ', color: THEME.accent },
-      'submitted': { text: 'รอหัวหน้าตรวจสอบ', color: THEME.accent },
-      'completed': { text: 'เสร็จสิ้น', color: THEME.primary }
+      'submitted': { text: 'ส่งให้บอสเช็ค', color: THEME.accent },
+      'completed': { text: 'ปิดจ๊อบ!', color: THEME.primary }
     };
 
     const newStatusInfo = statusConfig[status] || { text: status, color: THEME.neutral };
@@ -370,7 +370,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               contents: [
                 {
                   type: 'text',
-                  text: `อัปเดตสถานะงาน`,
+                  text: `มีคนขยับงานละ!`,
                   weight: 'bold',
                   size: 'lg',
                   color: THEME.text,
@@ -465,7 +465,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'ผู้รับผิดชอบ:',
+                      text: 'คนแบกงาน:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -485,7 +485,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'อัปเดตโดย:',
+                      text: 'คนกดอัปเดต:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -512,7 +512,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               style: 'secondary',
               action: {
                 type: 'uri',
-                label: 'ดูโปรเจกต์',
+                label: 'แวะไปดูงาน',
                 uri: projectUrl
               },
               color: newStatusInfo.color,
@@ -571,7 +571,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
       const daysLeft = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
       
       const urgencyColor = daysLeft <= 1 ? THEME.danger : daysLeft <= 2 ? THEME.accent : THEME.primary;
-      const urgencyText = daysLeft <= 0 ? 'เลยเดดไลน์!' : daysLeft === 1 ? 'พรุ่งนี้!' : `อีก ${daysLeft} วัน`;
+      const urgencyText = daysLeft <= 0 ? 'ไฟลุกตูดแล้วนะ!' : daysLeft === 1 ? 'พรุ่งนี้แล้ว เฮ้ลโหลว!' : `อีก ${daysLeft} วัน ชิลอยู่มั้ย?`;
 
       return {
         type: 'bubble',
@@ -658,7 +658,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'ผู้รับผิดชอบ:',
+                      text: 'คนแบกงาน:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -685,7 +685,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
               style: 'primary',
               action: {
                 type: 'uri',
-                label: 'ดูรายละเอียด',
+                label: 'ไปปั่นเดี๋ยวนี้!',
                 uri: `${liffUrl}/projectdetail/${task.project?.project_id || ''}`
               },
               color: urgencyColor,
@@ -747,7 +747,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `ยินดีด้วย! โปรเจกต์ "${projectData.project_name}" เสร็จสมบูรณ์แล้ว!`,
+      altText: `ปิดจ๊อบสวยๆ! 🎉 โปรเจกต์ "${projectData.project_name}" รอดตายแล้วพวกเรา!`,
       contents: {
         type: 'bubble',
         size: 'giga',
@@ -757,7 +757,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
           contents: [
             {
               type: 'text',
-              text: 'ยินดีด้วย!',
+              text: 'ฉลองงง! 🥂',
               weight: 'bold',
               size: 'xxl',
               align: 'center',
@@ -834,7 +834,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'สถานะ: บรรลุเป้าหมาย',
+                      text: 'สถานะ: ไม่ต้องทวงแล้ว!',
                       size: 'md',
                       color: THEME.primary,
                       weight: 'bold',
@@ -852,7 +852,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               contents: [
                 {
                   type: 'text',
-                  text: 'ขอแสดงความยินดีกับทุกคนที่ร่วมงานกันค่ะ!',
+                  text: 'เก่งมากเหล่าผึ้งงานที่รอดมาได้ ไปพักซะไป๊! 💛🐝!',
                   wrap: true,
                   color: THEME.muted,
                   size: 'sm',
@@ -878,7 +878,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
               height: 'sm',
               action: {
                 type: 'uri',
-                label: 'ดูรายละเอียดโปรเจกต์',
+                label: 'เช็คย้อนหลังกันหน่อย',
                 uri: projectUrl
               },
               color: THEME.primary
@@ -1318,7 +1318,7 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `โครงสร้างการประชุม: ${title}`,
+      altText: `โครงสร้างการนัดหมาย: ${title}`,
       contents: {
         type: 'bubble',
         size: 'mega',
