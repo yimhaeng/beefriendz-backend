@@ -2,42 +2,6 @@ const axios = require('axios');
 
 const LINE_MESSAGING_API = 'https://api.line.me/v2/bot/message/push';
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
-
-/**
- * สร้าง mention object สำหรับ Rich Text Message
- * @param {string} text - ข้อความ
- * @param {array} users - array ของ {userId, displayName}
- * @returns {object} - {textWithMentions, mentionees}
- */
-function createMentionObject(text, users = []) {
-  if (!users || users.length === 0) {
-    return { textWithMentions: text, mentionees: null };
-  }
-
-  let modifiedText = text;
-  const mentionees = [];
-  let offset = 0;
-
-  users.forEach(user => {
-    if (!user.userId || !user.displayName) return;
-
-    const mentionText = `@${user.displayName}`;
-    const startIndex = modifiedText.indexOf(user.displayName);
-
-    if (startIndex !== -1) {
-      const mentionee = {
-        type: 'user',
-        userId: user.userId,
-        index: startIndex,
-        length: mentionText.length
-      };
-      mentionees.push(mentionee);
-    }
-  });
-
-  return mentionees.length > 0 ? { textWithMentions: text, mentionees } : { textWithMentions: text, mentionees: null };
-}
-
 const THEME = {
   primary: '#FFA500',
   accent: '#F59E0B',
@@ -313,27 +277,6 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                       align: 'end'
                     }
                   ]
-                }] : []),
-                ...(taskData.assigned_user ? [{
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: 'ผู้รับผิดชอบ:',
-                      size: 'sm',
-                      color: THEME.muted,
-                      flex: 0
-                    },
-                    {
-                      type: 'text',
-                      text: `@${taskData.assigned_user.display_name}`,
-                      size: 'sm',
-                      color: THEME.text,
-                      align: 'end',
-                      weight: 'bold'
-                    }
-                  ]
                 }] : [])
               ]
             }
@@ -359,30 +302,11 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
       }
     };
 
-    // สร้าง mention message ถ้ามีผู้รับผิดชอบ
-    const messages = [];
-    if (taskData.assigned_user?.user_id) {
-      const mentionMessage = {
-        type: 'text',
-        text: `@${taskData.assigned_user.display_name} มีงานใหม่ให้คุณ: ${taskData.task_name}`,
-        mention: {
-          mentionees: [{
-            type: 'user',
-            userId: taskData.assigned_user.user_id,
-            index: 0,
-            length: `@${taskData.assigned_user.display_name}`.length
-          }]
-        }
-      };
-      messages.push(mentionMessage);
-    }
-    messages.push(flexMessage);
-
     const response = await axios.post(
       LINE_MESSAGING_API,
       {
         to: lineGroupId,
-        messages: messages
+        messages: [flexMessage]
       },
       {
         headers: {
@@ -429,28 +353,6 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${project.project_id}`;
 
-    // สร้าง mention array
-    const mentionUsers = [];
-    if (assigned_user?.user_id) {
-      mentionUsers.push({
-        userId: assigned_user.user_id,
-        displayName: assigned_user.display_name
-      });
-    }
-    if (updated_by_user?.user_id && updated_by_user.user_id !== assigned_user?.user_id) {
-      mentionUsers.push({
-        userId: updated_by_user.user_id,
-        displayName: updated_by_user.display_name
-      });
-    }
-
-    // สร้างข้อความพร้อม mention
-    let headerText = 'อัปเดตสถานะงาน';
-    if (mentionUsers.length > 0) {
-      const mentionList = mentionUsers.map(u => `@${u.displayName}`).join(' ');
-      headerText = `${mentionList} - อัปเดตสถานะงาน`;
-    }
-
     const flexMessage = {
       type: 'flex',
       altText: `งาน "${task_name}" เปลี่ยนเป็น ${newStatusInfo.text}`,
@@ -468,12 +370,11 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               contents: [
                 {
                   type: 'text',
-                  text: headerText,
+                  text: `อัปเดตสถานะงาน`,
                   weight: 'bold',
                   size: 'lg',
                   color: THEME.text,
-                  flex: 1,
-                  wrap: true
+                  flex: 1
                 },
                 {
                   type: 'image',
@@ -571,11 +472,10 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                     },
                     {
                       type: 'text',
-                      text: `@${assigned_user.display_name}`,
+                      text: assigned_user.display_name,
                       size: 'sm',
                       color: THEME.text,
-                      align: 'end',
-                      weight: 'bold'
+                      align: 'end'
                     }
                   ]
                 }] : []),
@@ -592,11 +492,10 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                     },
                     {
                       type: 'text',
-                      text: `@${updated_by_user.display_name}`,
+                      text: updated_by_user.display_name,
                       size: 'sm',
                       color: THEME.text,
-                      align: 'end',
-                      weight: 'bold'
+                      align: 'end'
                     }
                   ]
                 }] : [])
@@ -624,31 +523,11 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
       }
     };
 
-    // หากมี mention users ให้ส่ง text message ที่มี mention object ด้วย
-    const messages = [];
-    if (mentionUsers.length > 0) {
-      const mentionText = mentionUsers.map(u => `@${u.displayName}`).join(' ');
-      const mentionMessage = {
-        type: 'text',
-        text: `${mentionText} งาน "${task_name}" เปลี่ยนเป็น ${newStatusInfo.text}`,
-        mention: {
-          mentionees: mentionUsers.map(user => ({
-            type: 'user',
-            userId: user.userId,
-            index: mentionText.indexOf(`@${user.displayName}`),
-            length: `@${user.displayName}`.length
-          }))
-        }
-      };
-      messages.push(mentionMessage);
-    }
-    messages.push(flexMessage);
-
     const response = await axios.post(
       LINE_MESSAGING_API,
       {
         to: lineGroupId,
-        messages: messages
+        messages: [flexMessage]
       },
       {
         headers: {
@@ -694,9 +573,6 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
       const urgencyColor = daysLeft <= 1 ? THEME.danger : daysLeft <= 2 ? THEME.accent : THEME.primary;
       const urgencyText = daysLeft <= 0 ? 'เลยเดดไลน์!' : daysLeft === 1 ? 'พรุ่งนี้!' : `อีก ${daysLeft} วัน`;
 
-      // เพิ่ม mention user
-      const assigneeMention = task.assigned_user ? `@${task.assigned_user.display_name}` : '';
-
       return {
         type: 'bubble',
         hero: {
@@ -705,11 +581,10 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
           contents: [
             {
               type: 'text',
-              text: `${urgencyText}${assigneeMention ? ' ' + assigneeMention : ''}`,
+              text: `${urgencyText}`,
               weight: 'bold',
               size: 'lg',
-              color: THEME.text,
-              wrap: true
+              color: THEME.text
             }
           ],
           backgroundColor: urgencyColor,
@@ -790,11 +665,10 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
                     },
                     {
                       type: 'text',
-                      text: `@${task.assigned_user.display_name}`,
+                      text: task.assigned_user.display_name,
                       size: 'sm',
                       color: THEME.text,
-                      align: 'end',
-                      weight: 'bold'
+                      align: 'end'
                     }
                   ]
                 }] : [])
@@ -822,40 +696,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
       };
     });
 
-    // รวม mention users ทั้งหมด
-    const allMentionUsers = [];
-    tasksData.forEach(task => {
-      if (task.assigned_user?.user_id) {
-        if (!allMentionUsers.find(u => u.userId === task.assigned_user.user_id)) {
-          allMentionUsers.push({
-            userId: task.assigned_user.user_id,
-            displayName: task.assigned_user.display_name
-          });
-        }
-      }
-    });
-
     // สร้าง carousel message
-    const messages = [];
-    
-    // เพิ่ม mention text message ถ้ามี users
-    if (allMentionUsers.length > 0) {
-      const mentionText = allMentionUsers.map(u => `@${u.displayName}`).join(' ');
-      const mentionMessage = {
-        type: 'text',
-        text: `${mentionText} มีงานใกล้ถึงเดดไลน์!`,
-        mention: {
-          mentionees: allMentionUsers.map(user => ({
-            type: 'user',
-            userId: user.userId,
-            index: mentionText.indexOf(`@${user.displayName}`),
-            length: `@${user.displayName}`.length
-          }))
-        }
-      };
-      messages.push(mentionMessage);
-    }
-
     const flexMessage = {
       type: 'flex',
       altText: `แจ้งเตือน: มี ${tasksData.length} งานใกล้ถึงเดดไลน์`,
@@ -865,13 +706,11 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
       }
     };
 
-    messages.push(flexMessage);
-
     const response = await axios.post(
       LINE_MESSAGING_API,
       {
         to: lineGroupId,
-        messages: messages
+        messages: [flexMessage]
       },
       {
         headers: {
@@ -2138,26 +1977,6 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
       return mins > 0 ? `${hours} ชั่วโมง ${mins} นาที` : `${hours} ชั่วโมง`;
     };
 
-    // สร้าง mention message และ flex message
-    const messages = [];
-
-    // เพิ่ม mention text message
-    if (user?.user_id) {
-      const mentionMessage = {
-        type: 'text',
-        text: `@${user.display_name || 'สมาชิก'} ทำงานครบเวลาที่ตั้งไว้แล้ว!`,
-        mention: {
-          mentionees: [{
-            type: 'user',
-            userId: user.user_id,
-            index: 0,
-            length: `@${user.display_name}`.length
-          }]
-        }
-      };
-      messages.push(mentionMessage);
-    }
-
     const flexMessage = {
       type: 'flex',
       altText: `${user.display_name || 'สมาชิก'} ทำงานครบเวลาที่ตั้งไว้แล้ว`,
@@ -2193,7 +2012,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
             },
             {
               type: 'text',
-              text: `โดย @${user.display_name || 'สมาชิก'}`,
+              text: `โดย ${user.display_name || 'สมาชิก'}`,
               size: 'sm',
               color: THEME.muted,
               margin: 'sm'
@@ -2296,15 +2115,13 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
       }
     };
 
-    messages.push(flexMessage);
-
     console.log('[LINE] Sending time up notification to group:', lineGroupId);
     
     const response = await axios.post(
       LINE_MESSAGING_API,
       {
         to: lineGroupId,
-        messages: messages
+        messages: [flexMessage]
       },
       {
         headers: {
