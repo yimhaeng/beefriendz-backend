@@ -38,13 +38,37 @@ async function startWorkSession(req, res) {
       if (resumeSession) {
         // Resume session เดิม - ไม่ต้องสร้างใหม่
         console.log(`[startWorkSession] Resuming session ${resumeSession.session_id} for task ${task_id}`);
+
+        const nowIso = new Date().toISOString();
+        let nextPauseDurationSeconds = resumeSession.pause_duration_seconds || 0;
+
+        // ถ้า session เดิมอยู่ในสถานะ paused ให้คำนวณเวลาพักเพิ่มและเคลียร์ paused_at
+        if (resumeSession.paused_at) {
+          const pausedDuration = Math.floor((new Date() - new Date(resumeSession.paused_at)) / 1000);
+          nextPauseDurationSeconds += Math.max(0, pausedDuration);
+        }
+
+        const { error: resumeUpdateError } = await supabase
+          .from('work_sessions')
+          .update({
+            paused_at: null,
+            pause_duration_seconds: nextPauseDurationSeconds,
+            last_activity_at: nowIso,
+            status: 'active'
+          })
+          .eq('session_id', resumeSession.session_id);
+
+        if (resumeUpdateError) {
+          console.error('Error resuming existing session:', resumeUpdateError);
+          return res.status(500).json({ error: 'Failed to resume existing session' });
+        }
         
         // อัปเดต presence เป็น active
         const { error: presenceError } = await supabase
           .from('workspace_presence')
           .update({
             is_online: true,
-            last_active: new Date().toISOString(),
+            last_active: nowIso,
             activity_stage: 'active'
           })
           .eq('session_id', resumeSession.session_id);
