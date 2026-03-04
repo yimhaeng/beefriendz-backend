@@ -264,14 +264,14 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'ความสําคัญ:',
+                      text: 'คนแบกงาน:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
                     },
                     {
                       type: 'text',
-                      text: String(taskData.priority),
+                      text: String(taskData.assigned_user),
                       size: 'sm',
                       color: THEME.text,
                       align: 'end'
