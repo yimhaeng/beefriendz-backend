@@ -167,12 +167,21 @@ router.post('/', async (req, res) => {
       if (projectResult.success && projectResult.data?.group_id) {
         const groupResult = await groupController.getGroupById(projectResult.data.group_id);
         if (groupResult.success && groupResult.data?.line_group_id) {
+          let assignedUser = null;
+          if (result.data?.task_id) {
+            const createdTaskResult = await projectController.getTaskById(result.data.task_id);
+            if (createdTaskResult.success) {
+              assignedUser = createdTaskResult.data?.assigned_user || null;
+            }
+          }
+
           await lineController.sendTaskCreatedMessage(
             groupResult.data.line_group_id,
             {
               ...result.data,
               project_id: projectResult.data.project_id,
-              project_name: projectResult.data.project_name
+              project_name: projectResult.data.project_name,
+              assigned_user: assignedUser
             }
           );
         }

@@ -178,6 +178,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${taskData.project_id}`;
+    const assigneeName = taskData.assigned_user?.display_name || taskData.assigned_user_name || null;
 
     const flexMessage = {
       type: 'flex',
@@ -258,7 +259,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                     }
                   ]
                 }] : []),
-                ...(taskData.priority ? [{
+                ...(assigneeName ? [{
                   type: 'box',
                   layout: 'horizontal',
                   contents: [
@@ -271,7 +272,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                     },
                     {
                       type: 'text',
-                      text: assigned_user.display_name,
+                      text: assigneeName,
                       size: 'sm',
                       color: THEME.text,
                       align: 'end'
