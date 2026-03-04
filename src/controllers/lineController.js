@@ -1121,7 +1121,7 @@ async function syncLineGroupMembers(groupId, lineGroupId) {
 }
 
 /**
- * ส่ง Flex Message แจ้งเตือนเมื่อมีคนเริ่ม work session
+ * ส่ง Flex Message แจ้งเตือนเมื่อมีคนเริ่ม work session (เริ่ม Focus Session)
  */
 async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
   try {
@@ -1132,11 +1132,11 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
     const { user, task, project } = sessionData;
     
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const workspaceUrl = `${liffUrl}/workspace?groupId=${project.group_id}`;
+    const projectUrl = `${liffUrl}/projectdetail/${task.project_id || project.project_id}`;
 
     const flexMessage = {
       type: 'flex',
-      altText: `${user.display_name || 'สมาชิก'} เริ่มทำงานใน Workspace แล้ว!`,
+      altText: `${user.display_name || 'สมาชิก'} เริ่ม Focus Session แล้ว!`,
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1150,7 +1150,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
               contents: [
                 {
                   type: 'text',
-                  text: 'Workspace',
+                  text: 'Focus Session',
                   color: THEME.text,
                   size: 'xl',
                   weight: 'bold',
@@ -1263,8 +1263,8 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
               type: 'button',
               action: {
                 type: 'uri',
-                label: 'เข้า Workspace',
-                uri: workspaceUrl
+                label: 'ไปดูโปรเจกต์',
+                uri: projectUrl
               },
               style: 'secondary',
               color: THEME.primary,
@@ -1290,10 +1290,10 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
       }
     );
 
-    console.log('[LINE] Workspace invite sent successfully:', response.data);
+    console.log('[LINE] Focus session invite sent successfully:', response.data);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('[LINE] Error sending workspace invite:', error.response?.data || error.message);
+    console.error('[LINE] Error sending focus session invite:', error.response?.data || error.message);
     return { 
       success: false, 
       error: error.response?.data?.message || error.message 
@@ -1310,12 +1310,14 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { meeting_id, title, description, scheduled_time, location, creator, participants, group } = meetingData;
+    const { meeting_id, title, description, scheduled_time, location, creator, participants, group, project } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
     const acceptedCount = participants ? participants.filter(p => p.status === 'accepted').length : 0;
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const workspaceUrl = `${liffUrl}/workspace?groupId=${group?.group_id || ''}`;
+    const projectUrl = project?.project_id 
+      ? `${liffUrl}/projectdetail/${project.project_id}` 
+      : `${liffUrl}/projects`;
 
     const flexMessage = {
       type: 'flex',
@@ -1455,8 +1457,8 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
               height: 'sm',
               action: {
                 type: 'uri',
-                label: 'เข้า Workspace',
-                uri: workspaceUrl
+                label: 'ไปดูโปรเจกต์',
+                uri: projectUrl
               },
               color: THEME.primary
             }
@@ -1502,7 +1504,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
     const { meeting_id, title, scheduled_time, location, group } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const workspaceUrl = `${liffUrl}/workspace?groupId=${group?.group_id || ''}`;
+    // Meeting reminder notification doesn't need a specific URL link
 
     // คำนวณเวลาต่อไป
     const now = new Date();
@@ -1794,11 +1796,13 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { title, scheduled_time, location, group } = meetingData;
+    const { title, scheduled_time, location, group, project } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
 
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const workspaceUrl = `${liffUrl}/workspace?groupId=${group?.group_id || ''}`;
+    const projectUrl = project?.project_id 
+      ? `${liffUrl}/projectdetail/${project.project_id}` 
+      : `${liffUrl}/projects`;
 
     const flexMessage = {
       type: 'flex',
@@ -1923,7 +1927,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
               action: {
                 type: 'uri',
                 label: 'ยืนยันการเข้าร่วม',
-                uri: workspaceUrl
+                uri: projectUrl
               }
             }
           ]
@@ -1968,7 +1972,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
     const { user, task, project, duration } = sessionData;
     
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const workspaceUrl = `${liffUrl}/workspace?groupId=${project.group_id}`;
+    const projectUrl = `${liffUrl}/projectdetail/${task.project_id || project.project_id}`;
 
     // Format duration
     const formatDuration = (minutes) => {
@@ -2083,7 +2087,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
               contents: [
                 {
                   type: 'text',
-                  text: 'อัปเดตสถานะงานใน Workspace เพื่อบันทึกความคืบหน้า',
+                  text: 'อัปเดตสถานะงานเพื่อบันทึกความคืบหน้า',
                   size: 'xs',
                   color: THEME.muted,
                   wrap: true,
@@ -2105,8 +2109,8 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
               height: 'sm',
               action: {
                 type: 'uri',
-                label: 'เปิด Workspace',
-                uri: workspaceUrl
+                label: 'ไปดูงาน',
+                uri: projectUrl
               },
               color: THEME.primary
             }
