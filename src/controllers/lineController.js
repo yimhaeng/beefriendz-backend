@@ -1310,14 +1310,9 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { meeting_id, title, description, scheduled_time, location, creator, participants, group, project } = meetingData;
+    const { meeting_id, title, description, scheduled_time, location, creator, participants, group } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
     const acceptedCount = participants ? participants.filter(p => p.status === 'accepted').length : 0;
-
-    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const projectUrl = project?.project_id 
-      ? `${liffUrl}/projectdetail/${project.project_id}` 
-      : `${liffUrl}/projects`;
 
     const flexMessage = {
       type: 'flex',
@@ -1445,24 +1440,6 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
             }
           ],
           paddingAll: '20px'
-        },
-        footer: {
-          type: 'box',
-          layout: 'vertical',
-          spacing: 'sm',
-          contents: [
-            {
-              type: 'button',
-              style: 'primary',
-              height: 'sm',
-              action: {
-                type: 'uri',
-                label: 'ไปดูโปรเจกต์',
-                uri: projectUrl
-              },
-              color: THEME.primary
-            }
-          ],
         }
       }
     };
@@ -1796,13 +1773,8 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { title, scheduled_time, location, group, project } = meetingData;
+    const { title, scheduled_time, location, group } = meetingData;
     const meetingDateTime = new Date(scheduled_time);
-
-    const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const projectUrl = project?.project_id 
-      ? `${liffUrl}/projectdetail/${project.project_id}` 
-      : `${liffUrl}/projects`;
 
     const flexMessage = {
       type: 'flex',
@@ -1914,23 +1886,6 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
             }
           ],
           paddingAll: '20px'
-        },
-        footer: {
-          type: 'box',
-          layout: 'vertical',
-          contents: [
-            {
-              type: 'button',
-              style: 'primary',
-              color: THEME.accent,
-              height: 'sm',
-              action: {
-                type: 'uri',
-                label: 'ยืนยันการเข้าร่วม',
-                uri: projectUrl
-              }
-            }
-          ]
         }
       }
     };
