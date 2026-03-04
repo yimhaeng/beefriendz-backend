@@ -1630,9 +1630,9 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
               color: THEME.danger,
               height: 'sm',
               action: {
-                type: 'uri',
-                label: 'เข้า Workspace เดี๋ยวนี้',
-                uri: workspaceUrl
+                type: 'message',
+                label: 'ขอเลื่อนไปก่อนได้ไหม...',
+                text: '"@BeeFriendz ขอเลื่อนนัด"'
               }
             }
           ]
