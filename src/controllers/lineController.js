@@ -271,7 +271,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
                     },
                     {
                       type: 'text',
-                      text: String(taskData.assigned_user),
+                      text: assigned_user.display_name,
                       size: 'sm',
                       color: THEME.text,
                       align: 'end'
