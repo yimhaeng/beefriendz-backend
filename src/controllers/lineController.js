@@ -1200,7 +1200,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                     },
                     {
                       type: 'text',
-                      text: 'เริ่มทำงานแล้ว',
+                      text: `เริ่มทำงาน ${project.task_name || 'งาน'} แล้ว`,
                       size: 'sm',
                       color: THEME.muted,
                       margin: 'sm'
@@ -1659,7 +1659,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `ยกเลิกการประชุม: ${title}`,
+      altText: `ยกเลิกการนัดหมาย: ${title}`,
       contents: {
         type: 'bubble',
         header: {
@@ -1668,7 +1668,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
           contents: [
             {
               type: 'text',
-              text: 'ยกเลิกการประชุม',
+              text: 'ยกเลิกการนัดหมาย',
               weight: 'bold',
               size: 'lg',
               color: THEME.white
@@ -1701,7 +1701,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'เดิมประกาศ:',
+                      text: 'เดิมนัดหมาย:',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -1724,7 +1724,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
                 },
                 {
                   type: 'text',
-                  text: 'ขออภัยค่ะ การประชุมนี้ได้ยกเลิกไปแล้ว หากมีข้อสงสัยติดต่อผู้จัด',
+                  text: 'ขออภัยค่ะ การนัดหมายนี้ได้ยกเลิกไปแล้ว หากมีข้อสงสัยติดต่อผู้จัด',
                   size: 'sm',
                   color: THEME.muted,
                   margin: 'lg',
@@ -1939,7 +1939,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `${user.display_name || 'สมาชิก'} ทำงานครบเวลาที่ตั้งไว้แล้ว`,
+      altText: `หมดเวลาโฟกัสของ ${user.display_name || 'สมาชิก'} แล้ว 🐝`,
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1949,7 +1949,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
           contents: [
             {
               type: 'text',
-              text: 'Focus Session Complete',
+              text: 'ภารกิจโฟกัสสำเร็จ!',
               weight: 'bold',
               size: 'xl',
               color: THEME.text
@@ -1972,7 +1972,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
             },
             {
               type: 'text',
-              text: `โดย ${user.display_name || 'สมาชิก'}`,
+              text: `ปั่นงานโดย: ${user.display_name || 'สมาชิก'}`,
               size: 'sm',
               color: THEME.muted,
               margin: 'sm'
@@ -1993,7 +1993,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'ระยะเวลา',
+                      text: 'ใช้เวลาไป',
                       size: 'sm',
                       color: THEME.muted,
                       flex: 0
@@ -2032,24 +2032,8 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
                   ]
                 }
               ]
-            },
-            {
-              type: 'box',
-              layout: 'vertical',
-              paddingAll: '12px',
-              backgroundColor: THEME.background,
-              cornerRadius: '12px',
-              contents: [
-                {
-                  type: 'text',
-                  text: 'อัปเดตสถานะงานเพื่อบันทึกความคืบหน้า',
-                  size: 'xs',
-                  color: THEME.muted,
-                  wrap: true,
-                  align: 'center'
-                }
-              ]
             }
+            
           ],
           paddingAll: '20px'
         },
@@ -2064,7 +2048,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
               height: 'sm',
               action: {
                 type: 'uri',
-                label: 'ไปดูงาน',
+                label: 'ไปดูความคืบหน้า',
                 uri: projectUrl
               },
               color: THEME.primary
