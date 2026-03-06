@@ -1906,15 +1906,34 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
           layout: 'vertical',
           contents: [
             {
-              type: 'text',
-              text: 'ภารกิจโฟกัสสำเร็จ!',
-              weight: 'bold',
-              size: 'xl',
-              color: THEME.text
+              type: 'box',
+              layout: 'horizontal',
+              spacing: 'sm',
+              alignItems: 'center',
+              contents: [
+                {
+                  type: 'text',
+                  text: 'ภารกิจโฟกัสสำเร็จ!',
+                  weight: 'bold',
+                  size: 'lg',
+                  color: THEME.text,
+                  flex: 1
+                },
+                {
+                  type: 'image',
+                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772340880/minibee_thdnod.png',
+                  size: 'md',
+                  aspectMode: 'cover',
+                  flex: 0
+                }
+              ]
             }
           ],
           backgroundColor: THEME.primary,
-          paddingAll: '20px'
+          paddingStart: '15px',
+          paddingEnd: '15px',
+          paddingBottom: '0px',
+          paddingTop: '0px'
         },
         body: {
           type: 'box',
