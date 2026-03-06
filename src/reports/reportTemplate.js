@@ -249,7 +249,7 @@ function getProjectReportHTML(data) {
     <h2>สมาชิกทีมและจำนวนงาน</h2>
     ${sortedParticipationData.map((member, idx) => `
       <p style="font-size: 11px; margin: 5px 0;">
-        ${idx + 1}. ${escapeHtml(member.userName)} (${escapeHtml(member.role || 'สมาชิก')}): ${member.taskCount} งาน
+        ${idx + 1}. ${escapeHtml(member.userName)}${member.displayRole ? ` — <em>${escapeHtml(member.displayRole)}</em>` : ''} (${escapeHtml(member.role || 'สมาชิก')}): ${member.taskCount} งาน
       </p>
     `).join('')}
   </div>

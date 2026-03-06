@@ -58,6 +58,15 @@ router.put('/:groupId/:userId', async (req, res) => {
   else res.status(400).json({ error: result.error });
 });
 
+// PATCH /api/group-members/:groupId/:userId/display-role - update display_role only
+router.patch('/:groupId/:userId/display-role', async (req, res) => {
+  const { groupId, userId } = req.params;
+  const { display_role } = req.body;
+  const result = await gmController.updateDisplayRole(groupId, userId, display_role);
+  if (result.success) res.json(result.data);
+  else res.status(400).json({ error: result.error });
+});
+
 // DELETE /api/group-members/:id - remove member
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;

@@ -31,6 +31,7 @@ async function getProjectReportData(projectId) {
     .from('group_members')
     .select(`
       role,
+      display_role,
       users(user_id, display_name, picture_url)
     `)
     .eq('group_id', project.group_id);
@@ -45,6 +46,7 @@ async function getProjectReportData(projectId) {
       userId: id,
       userName: name || 'ไม่ทราบ',
       role: m.role || 'สมาชิก',
+      displayRole: m.display_role || null,
       taskCount: 0,
     };
   });
