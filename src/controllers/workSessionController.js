@@ -359,6 +359,36 @@ async function getActiveSessions(req, res) {
 }
 
 /**
+ * ดึงข้อมูล session โดย ID เพื่อ sync state กับ frontend
+ * GET /api/work-sessions/:sessionId
+ */
+async function getSessionById(req, res) {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required' });
+    }
+
+    const { data: session, error } = await supabase
+      .from('work_sessions')
+      .select('*')
+      .eq('session_id', sessionId)
+      .single();
+
+    if (error || !session) {
+      console.error('Session not found:', error);
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ success: true, session });
+  } catch (err) {
+    console.error('getSessionById error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+/**
  * ดึงข้อมูล active presence (users ที่ online) ของ group
  * GET /api/work-sessions/presence?group_id=xxx
  */
@@ -955,6 +985,7 @@ module.exports = {
   resumeWorkSession,
   extendWorkSession,
   getActiveSessions,
+  getSessionById,
   getActivePresence,
   updatePresence,
   updateActivityStage,

@@ -7,6 +7,7 @@ const {
   resumeWorkSession,
   extendWorkSession,
   getActiveSessions,
+  getSessionById,
   getActivePresence,
   updatePresence,
   getUserSessionHistory,
@@ -33,6 +34,9 @@ router.post('/extend', extendWorkSession);
 
 // ดึงข้อมูล active sessions ทั้งหมด
 router.get('/active', getActiveSessions);
+
+// ดึงข้อมูล session โดย ID
+router.get('/:sessionId', getSessionById);
 
 // ดึงข้อมูล active presence
 router.get('/presence', getActivePresence);
