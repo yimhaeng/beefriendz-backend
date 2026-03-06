@@ -247,11 +247,26 @@ function getProjectReportHTML(data) {
   ${sortedParticipationData.length ? `
   <div class="section">
     <h2>สมาชิกทีมและจำนวนงาน</h2>
-    ${sortedParticipationData.map((member, idx) => `
-      <p style="font-size: 11px; margin: 5px 0;">
-        ${idx + 1}. ${escapeHtml(member.userName)}${member.displayRole ? ` — <em>${escapeHtml(member.displayRole)}</em>` : ''} (${escapeHtml(member.role || 'สมาชิก')}): ${member.taskCount} งาน
-      </p>
-    `).join('')}
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 5%;">#</th>
+          <th style="width: 40%;">ชื่อ</th>
+          <th style="width: 35%;">ตำแหน่ง</th>
+          <th style="width: 20%;">จำนวนงาน</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sortedParticipationData.map((member, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(member.userName)}</td>
+            <td>${member.displayRole ? escapeHtml(member.displayRole) : escapeHtml(member.role || 'สมาชิก')}</td>
+            <td>${member.taskCount} งาน</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
   </div>
   ` : ''}
 
