@@ -1966,28 +1966,6 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
                       weight: 'bold'
                     }
                   ]
-                },
-                {
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: 'โปรเจกต์',
-                      size: 'sm',
-                      color: THEME.muted,
-                      flex: 0
-                    },
-                    {
-                      type: 'text',
-                      text: project.project_name || 'Project',
-                      size: 'sm',
-                      color: THEME.text,
-                      align: 'end',
-                      wrap: true,
-                      flex: 3
-                    }
-                  ]
                 }
               ]
             }
