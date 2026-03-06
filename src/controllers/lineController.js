@@ -1882,10 +1882,11 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
       throw new Error('LINE_CHANNEL_ACCESS_TOKEN is not set');
     }
 
-    const { user, task, project, duration } = sessionData;
+    const { user = {}, task = {}, project = {}, duration = 0 } = sessionData || {};
     
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
-    const projectUrl = `${liffUrl}/projectdetail/${task.project_id || project.project_id}`;
+    const projectId = task.project_id || project.project_id;
+    const projectUrl = projectId ? `${liffUrl}/projectdetail/${projectId}` : liffUrl;
 
     // Format duration
     const formatDuration = (minutes) => {
@@ -1906,34 +1907,15 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
           layout: 'vertical',
           contents: [
             {
-              type: 'box',
-              layout: 'horizontal',
-              spacing: 'sm',
-              alignItems: 'center',
-              contents: [
-                {
-                  type: 'text',
-                  text: 'ภารกิจโฟกัสสำเร็จ!',
-                  weight: 'bold',
-                  size: 'lg',
-                  color: THEME.text,
-                  flex: 1
-                },
-                {
-                  type: 'image',
-                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772340880/minibee_thdnod.png',
-                  size: 'md',
-                  aspectMode: 'cover',
-                  flex: 0
-                }
-              ]
+              type: 'text',
+              text: 'ภารกิจโฟกัสสำเร็จ!',
+              weight: 'bold',
+              size: 'xl',
+              color: THEME.text
             }
           ],
           backgroundColor: THEME.primary,
-          paddingStart: '15px',
-          paddingEnd: '15px',
-          paddingBottom: '0px',
-          paddingTop: '0px'
+          paddingAll: '20px'
         },
         body: {
           type: 'box',
