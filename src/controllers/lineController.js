@@ -132,7 +132,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
               style: 'secondary',
               action: {
                 type: 'uri',
-                label: 'แวะไปดูรังใหม่กันหน่อย',
+                label: 'แวะดูโปรเจกต์ใหม่กันหน่อย',
                 uri: projectUrl
               },
               color: THEME.primary
