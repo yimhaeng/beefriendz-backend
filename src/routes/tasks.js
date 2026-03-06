@@ -267,6 +267,16 @@ router.put('/:id', async (req, res) => {
                 }
               );
               console.log(`[LINE NOTIFICATION ${notificationKey}] ✅ Sent:`, lineResult.success);
+
+              // ถ้าโปรเจกต์เสร็จสมบูรณ์ ส่งแจ้งเตือนหลังจาก task status update
+              if (result.projectCompleted && result.projectLineGroupId && result.projectCompletionData) {
+                console.log(`[LINE NOTIFICATION ${notificationKey}] Sending project completion message...`);
+                await lineController.sendProjectCompletedMessage(
+                  result.projectLineGroupId,
+                  result.projectCompletionData
+                );
+                console.log(`[LINE NOTIFICATION ${notificationKey}] ✅ Project completion message sent`);
+              }
             } else {
               console.log(`[LINE NOTIFICATION ${notificationKey}] ❌ No LINE group ID`);
             }

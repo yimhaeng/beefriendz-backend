@@ -329,7 +329,17 @@ async function updateTask(taskId, taskData) {
 
       // ตรวจสอบว่างานทั้งหมดเสร็จสิ้นหรือยัง (เมื่อเปลี่ยนเป็น completed)
       if (taskData.status === 'completed') {
-        await checkAndUpdateProjectCompletion(oldTask.project_id);
+        const completionResult = await checkAndUpdateProjectCompletion(oldTask.project_id);
+        if (completionResult.achieved) {
+          return {
+            success: true,
+            data: Array.isArray(data) ? data[0] : data,
+            project_id: oldTask.project_id,
+            projectCompleted: true,
+            projectLineGroupId: completionResult.lineGroupId,
+            projectCompletionData: completionResult.projectData
+          };
+        }
       }
     }
 
@@ -633,20 +643,16 @@ async function checkAndUpdateProjectCompletion(projectId) {
 
       console.log(`[checkProjectCompletion] ✅ Project ${projectId} marked as ACHIEVED!`);
 
-      // ส่ง LINE notification
-      if (project?.groups?.line_group_id) {
-        const lineController = require('./lineController');
-        await lineController.sendProjectCompletedMessage(
-          project.groups.line_group_id,
-          {
-            project_id: project.project_id,
-            project_name: project.project_name,
-            total_tasks: tasks.length
-          }
-        );
-      }
-
-      return { success: true, achieved: true };
+      return {
+        success: true,
+        achieved: true,
+        lineGroupId: project?.groups?.line_group_id || null,
+        projectData: {
+          project_id: project.project_id,
+          project_name: project.project_name,
+          total_tasks: tasks.length
+        }
+      };
     }
 
     return { success: true, achieved: false };

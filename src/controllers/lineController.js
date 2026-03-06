@@ -1462,7 +1462,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
       contents: {
         type: 'bubble',
         size: 'mega',
-        hero: {
+        header: {
           type: 'box',
           layout: 'vertical',
           contents: [
@@ -1516,8 +1516,9 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'เวลา',
+                      text: 'เวลา:',
                       size: 'sm',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
@@ -1529,6 +1530,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                       size: 'sm',
                       color: THEME.text,
                       weight: 'bold',
+                      align: 'end',
                       flex: 3
                     }
                   ]
@@ -1539,8 +1541,9 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'สถานที่',
+                      text: 'สถานที่:',
                       size: 'sm',
+                      color: THEME.muted,
                       flex: 0
                     },
                     {
@@ -1549,6 +1552,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
                       size: 'sm',
                       color: THEME.text,
                       wrap: true,
+                      align: 'end',
                       flex: 3
                     }
                   ]
