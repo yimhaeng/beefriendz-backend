@@ -1150,7 +1150,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
               contents: [
                 {
                   type: 'text',
-                  text: 'Focus Session',
+                  text: 'มีคนเริ่มปั่นงานแล้ว!',
                   color: THEME.text,
                   size: 'xl',
                   weight: 'bold',
@@ -1991,7 +1991,6 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
                 }
               ]
             }
-            
           ],
           paddingAll: '20px'
         },
