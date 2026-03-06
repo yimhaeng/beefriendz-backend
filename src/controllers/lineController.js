@@ -1471,8 +1471,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
               text: 'เตือนการประชุม',
               weight: 'bold',
               size: 'xl',
-              color: THEME.white,
-              align: 'center'
+              color: THEME.white
             }
           ],
           backgroundColor: THEME.danger,
@@ -1488,8 +1487,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
               weight: 'bold',
               size: 'lg',
               wrap: true,
-              color: THEME.text,
-              align: 'center'
+              color: THEME.text
             },
             {
               type: 'text',
@@ -1497,8 +1495,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
               size: 'md',
               color: THEME.danger,
               weight: 'bold',
-              margin: 'md',
-              align: 'center'
+              margin: 'md'
             },
             {
               type: 'separator',
