@@ -11,6 +11,7 @@ const groupMembersRoute = require('./routes/groupMembers');
 const reportRoutes = require('./routes/reportRoutes');
 const workSessionsRoute = require('./routes/workSessions');
 const scheduledMeetingsRoute = require('./routes/scheduledMeetingsRoute');
+const stickersRoute = require('./routes/stickers');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +53,7 @@ app.use('/api/group-members', groupMembersRoute);
 app.use('/api/reports', reportRoutes);
 app.use('/api/work-sessions', workSessionsRoute);
 app.use('/api/scheduled-meetings', scheduledMeetingsRoute);
+app.use('/api/stickers', stickersRoute);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
