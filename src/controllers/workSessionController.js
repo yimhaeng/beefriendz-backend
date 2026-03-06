@@ -425,14 +425,15 @@ async function getActivePresence(req, res) {
 
     if (error) {
       console.error('Error fetching presence:', error);
-      return res.status(500).json({ error: 'Failed to fetch presence' });
+      // Return empty array instead of error when no active sessions
+      return res.json({ success: true, presence: [] });
     }
 
     // Filter by group_id if provided
     let filteredPresence = presence || [];
     if (group_id && filteredPresence.length > 0) {
       filteredPresence = filteredPresence.filter(
-        p => String(p?.session?.task?.project?.group_id) === String(group_id)
+        p => p?.session?.task?.project?.group_id && String(p.session.task.project.group_id) === String(group_id)
       );
     }
 
