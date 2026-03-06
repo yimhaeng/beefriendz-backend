@@ -1200,7 +1200,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                     },
                     {
                       type: 'text',
-                      text: `เริ่มทำงาน ${project.task_name || 'งาน'} แล้ว`,
+                      text: `เริ่มทำงาน ${task?.task_name || 'งาน'} แล้ว`,
                       size: 'sm',
                       color: THEME.muted,
                       margin: 'sm'
@@ -1208,48 +1208,6 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
                   ],
                   margin: 'lg'
                 }
-              ]
-            },
-            {
-              type: 'separator',
-              margin: 'xl'
-            },
-            {
-              type: 'box',
-              layout: 'vertical',
-              margin: 'lg',
-              spacing: 'sm',
-              contents: [
-                {
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: task.task_name || 'Untitled Task',
-                      size: 'sm',
-                      color: THEME.text,
-                      wrap: true,
-                      margin: 'sm'
-                    }
-                  ]
-                },
-                {
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: project.project_name || 'Project',
-                      size: 'sm',
-                      color: THEME.muted,
-                      wrap: true,
-                      margin: 'sm'
-                    }
-                  ],
-                  margin: 'sm'
-                },
-
               ]
             }
           ],
@@ -1939,7 +1897,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
 
     const flexMessage = {
       type: 'flex',
-      altText: `หมดเวลาโฟกัสของ ${user.display_name || 'สมาชิก'} แล้ว 🐝`,
+      altText: `หมดเวลาโฟกัสของ ${user.display_name || 'สมาชิก'} แล้ว`,
       contents: {
         type: 'bubble',
         size: 'mega',
