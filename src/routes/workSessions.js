@@ -35,11 +35,11 @@ router.post('/extend', extendWorkSession);
 // ดึงข้อมูล active sessions ทั้งหมด
 router.get('/active', getActiveSessions);
 
-// ดึงข้อมูล session โดย ID
-router.get('/:sessionId', getSessionById);
-
 // ดึงข้อมูล active presence
 router.get('/presence', getActivePresence);
+
+// ดึงข้อมูล session โดย ID
+router.get('/:sessionId', getSessionById);
 
 // อัปเดต presence (heartbeat)
 router.post('/heartbeat', updatePresence);
