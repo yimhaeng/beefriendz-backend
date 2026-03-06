@@ -891,11 +891,69 @@ async function checkAndNotifyTimeUp(req, res) {
   }
 }
 
+/**
+ * Extend work session - add more time to planned_duration
+ * POST /api/work-sessions/extend
+ * Body: { session_id, additional_minutes }
+ */
+async function extendWorkSession(req, res) {
+  try {
+    const { session_id, additional_minutes } = req.body;
+
+    if (!session_id) {
+      return res.status(400).json({ error: 'session_id is required' });
+    }
+
+    if (!additional_minutes || additional_minutes <= 0) {
+      return res.status(400).json({ error: 'additional_minutes must be greater than 0' });
+    }
+
+    // ดึงข้อมูล session
+    const { data: session, error: fetchError } = await supabase
+      .from('work_sessions')
+      .select('*')
+      .eq('session_id', session_id)
+      .single();
+
+    if (fetchError || !session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (session.ended_at) {
+      return res.status(400).json({ error: 'Session already ended' });
+    }
+
+    // Update planned_duration by adding additional_minutes
+    const newPlannedDuration = (session.planned_duration || 0) + additional_minutes;
+
+    const { data: updatedSession, error: updateError } = await supabase
+      .from('work_sessions')
+      .update({
+        planned_duration: newPlannedDuration,
+        last_activity_at: new Date().toISOString()
+      })
+      .eq('session_id', session_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error extending session:', updateError);
+      return res.status(500).json({ error: 'Failed to extend session' });
+    }
+
+    res.json({ success: true, session: updatedSession });
+  } catch (err) {
+    console.error('extendWorkSession error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   startWorkSession,
   endWorkSession,
   pauseWorkSession,
   resumeWorkSession,
+  extendWorkSession,
   getActiveSessions,
   getActivePresence,
   updatePresence,

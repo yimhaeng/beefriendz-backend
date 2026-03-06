@@ -5,6 +5,7 @@ const {
   endWorkSession,
   pauseWorkSession,
   resumeWorkSession,
+  extendWorkSession,
   getActiveSessions,
   getActivePresence,
   updatePresence,
@@ -26,6 +27,9 @@ router.post('/pause', pauseWorkSession);
 
 // กลับมาทำต่อ (Resume) work session
 router.post('/resume', resumeWorkSession);
+
+// ขยายเวลา (Extend) work session
+router.post('/extend', extendWorkSession);
 
 // ดึงข้อมูล active sessions ทั้งหมด
 router.get('/active', getActiveSessions);
