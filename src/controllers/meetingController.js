@@ -93,23 +93,6 @@ async function createOrUpdateMeeting(req, res) {
 
       meeting = newMeeting;
 
-      // Add all group members as invited participants
-      const { data: groupMembers, error: membersError } = await supabase
-        .from('group_members')
-        .select('user_id')
-        .eq('group_id', group_id);
-
-      if (!membersError && groupMembers && groupMembers.length > 0) {
-        const participants = groupMembers.map(m => ({
-          meeting_id: newMeeting.meeting_id,
-          user_id: m.user_id,
-          status: 'invited'
-        }));
-
-        await supabase
-          .from('meeting_participants')
-          .insert(participants);
-      }
     }
 
     // Fetch full meeting details with group info
@@ -118,12 +101,6 @@ async function createOrUpdateMeeting(req, res) {
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
-        participants:meeting_participants (
-          id,
-          user_id,
-          status,
-          user:user_id (user_id, display_name, picture_url)
-        ),
         group:group_id (group_id, group_name, line_group_id)
       `)
       .eq('meeting_id', meeting.meeting_id)
@@ -159,12 +136,6 @@ async function getUpcomingMeetings(req, res) {
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
-        participants:meeting_participants (
-          id,
-          user_id,
-          status,
-          user:user_id (user_id, display_name, picture_url)
-        ),
         group:group_id (group_id, group_name, line_group_id)
       `)
       .eq('status', 'pending')
@@ -316,13 +287,7 @@ async function getMeetingsByGroup(req, res) {
       .from('scheduled_reminders')
       .select(`
         *,
-        creator:creator_id (user_id, display_name, picture_url),
-        participants:meeting_participants (
-          id,
-          user_id,
-          status,
-          user:user_id (user_id, display_name, picture_url)
-        )
+        creator:creator_id (user_id, display_name, picture_url)
       `)
       .eq('group_id', groupId)
       .eq('status', 'pending')
@@ -358,12 +323,6 @@ async function getMeetingDetails(req, res) {
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
-        participants:meeting_participants (
-          id,
-          user_id,
-          status,
-          user:user_id (user_id, display_name, picture_url)
-        ),
         group:group_id (group_id, group_name, line_group_id)
       `)
       .eq('meeting_id', meetingId)
@@ -375,49 +334,6 @@ async function getMeetingDetails(req, res) {
     }
 
     return res.json({ success: true, meeting });
-  } catch (error) {
-    console.error('[Meeting] Unexpected error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
-/**
- * ยืนยันการเข้าร่วมการประชุม
- * PUT /api/scheduled-meetings/:meetingId/participants/:userId
- * Body: { status: 'accepted' | 'declined' }
- */
-async function updateParticipantStatus(req, res) {
-  try {
-    const { meetingId, userId } = req.params;
-    const { status } = req.body;
-
-    if (!meetingId || !userId || !status) {
-      return res.status(400).json({ error: 'meetingId, userId, and status are required' });
-    }
-
-    if (!['accepted', 'declined'].includes(status)) {
-      return res.status(400).json({ error: 'status must be accepted or declined' });
-    }
-
-    const updateData = { status };
-    if (status === 'accepted') {
-      updateData.joined_at = new Date().toISOString();
-    }
-
-    const { data: participant, error } = await supabase
-      .from('meeting_participants')
-      .update(updateData)
-      .eq('meeting_id', meetingId)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[Meeting] Error updating participant status:', error);
-      return res.status(500).json({ error: 'Failed to update participant status' });
-    }
-
-    return res.json({ success: true, message: 'Participant status updated', participant });
   } catch (error) {
     console.error('[Meeting] Unexpected error:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -446,12 +362,6 @@ async function sendMeetingReminders(req, res) {
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
-        participants:meeting_participants (
-          id,
-          user_id,
-          status,
-          user:user_id (user_id, display_name, picture_url)
-        ),
         group:group_id (group_id, group_name, line_group_id)
       `)
       .eq('status', 'pending')
@@ -530,6 +440,5 @@ module.exports = {
   rescheduleMeeting,
   getMeetingsByGroup,
   getMeetingDetails,
-  updateParticipantStatus,
   sendMeetingReminders
 };

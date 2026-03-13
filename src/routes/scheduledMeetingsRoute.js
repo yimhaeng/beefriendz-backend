@@ -7,7 +7,6 @@ const {
   rescheduleMeeting,
   getMeetingsByGroup,
   getMeetingDetails,
-  updateParticipantStatus,
   sendMeetingReminders
 } = require('../controllers/meetingController');
 
@@ -31,8 +30,5 @@ router.put('/:meetingId/cancel', cancelMeeting);
 
 // เลื่อนเวลาการประชุม
 router.put('/:meetingId/reschedule', rescheduleMeeting);
-
-// ยืนยันการเข้าร่วมการประชุม
-router.put('/:meetingId/participants/:userId', updateParticipantStatus);
 
 module.exports = router;
