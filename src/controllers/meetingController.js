@@ -30,7 +30,7 @@ async function createOrUpdateMeeting(req, res) {
     endOfDay.setHours(23, 59, 59, 999);
 
     const { data: existingMeetings, error: checkError } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select('*')
       .eq('group_id', group_id)
       .eq('status', 'pending')
@@ -52,7 +52,7 @@ async function createOrUpdateMeeting(req, res) {
       console.log(`[Meeting] Updating existing meeting ${latestMeeting.meeting_id}`);
       
       const { data: updatedMeeting, error: updateError } = await supabase
-        .from('scheduled_meetings')
+        .from('scheduled_reminders')
         .update({
           title,
           description: description || null,
@@ -73,7 +73,7 @@ async function createOrUpdateMeeting(req, res) {
     } else {
       // Create new meeting
       const { data: newMeeting, error: insertError } = await supabase
-        .from('scheduled_meetings')
+        .from('scheduled_reminders')
         .insert({
           group_id,
           creator_id,
@@ -114,7 +114,7 @@ async function createOrUpdateMeeting(req, res) {
 
     // Fetch full meeting details with group info
     const { data: fullMeeting, error: fetchError } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
@@ -155,7 +155,7 @@ async function getUpcomingMeetings(req, res) {
     const futureTime = new Date(now.getTime() + minutes * 60000);
 
     let query = supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
@@ -203,7 +203,7 @@ async function cancelMeeting(req, res) {
     }
 
     const { data: meeting, error: updateError } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .update({
         status: 'cancelled',
         updated_at: new Date().toISOString()
@@ -219,7 +219,7 @@ async function cancelMeeting(req, res) {
 
     // Fetch full details for notification
     const { data: fullMeeting } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         group:group_id (group_id, group_name, line_group_id)
@@ -260,7 +260,7 @@ async function rescheduleMeeting(req, res) {
     }
 
     const { data: meeting, error: updateError } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .update({
         scheduled_time: newTime.toISOString(),
         updated_at: new Date().toISOString()
@@ -276,7 +276,7 @@ async function rescheduleMeeting(req, res) {
 
     // Fetch full details for notification
     const { data: fullMeeting } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         group:group_id (group_id, group_name, line_group_id)
@@ -313,7 +313,7 @@ async function getMeetingsByGroup(req, res) {
     startOfToday.setHours(0, 0, 0, 0);
 
     const { data: meetings, error } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
@@ -354,7 +354,7 @@ async function getMeetingDetails(req, res) {
     }
 
     const { data: meeting, error } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),
@@ -442,7 +442,7 @@ async function sendMeetingReminders(req, res) {
     const futureISO = futureTime.toISOString();
 
     const { data: upcomingMeetings, error: fetchError } = await supabase
-      .from('scheduled_meetings')
+      .from('scheduled_reminders')
       .select(`
         *,
         creator:creator_id (user_id, display_name, picture_url),

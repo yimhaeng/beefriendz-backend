@@ -368,10 +368,10 @@ For each meeting in response:
 
 ## 📊 Database Schema
 
-### scheduled_meetings
+### scheduled_reminders
 
 ```sql
-CREATE TABLE scheduled_meetings (
+CREATE TABLE scheduled_reminders (
   meeting_id BIGINT PRIMARY KEY AUTO_INCREMENT,
   group_id BIGINT NOT NULL,
   creator_id BIGINT NOT NULL,
@@ -400,7 +400,7 @@ CREATE TABLE meeting_participants (
   status ENUM('invited', 'accepted', 'declined') DEFAULT 'invited',
   joined_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (meeting_id) REFERENCES scheduled_meetings(meeting_id),
+  FOREIGN KEY (meeting_id) REFERENCES scheduled_reminders(meeting_id),
   FOREIGN KEY (user_id) REFERENCES users(user_id),
   UNIQUE KEY unique_meeting_participant (meeting_id, user_id),
   INDEX idx_meeting_id (meeting_id)
