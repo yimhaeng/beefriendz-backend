@@ -14,6 +14,65 @@ const THEME = {
 };
 
 /**
+ * สร้าง Quick Reply items สำหรับแนบท้าย Flex Message
+ */
+function buildQuickReply(projectUrl) {
+  const liffBase = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
+  return {
+    items: [
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: 'สร้างโปรเจกต์',
+          text: '@BeeFriendz สร้างโปรเจกต์'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'uri',
+          label: 'ดูโปรเจกต์',
+          uri: projectUrl || liffBase
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: 'เพิ่มงาน',
+          text: '@BeeFriendz มอบหมายงาน'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: 'อัปเดตสถานะ',
+          text: '@BeeFriendz มอบหมายงาน'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: 'ช่วยเตือน',
+          text: '@BeeFriendz ช่วยเตือนหน่อย'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'message',
+          label: 'เลือกตำแหน่ง',
+          text: 'เลือกตำแหน่ง'
+        }
+      }
+    ]
+  };
+}
+
+/**
  * ส่ง Flex Message แจ้งโปรเจกต์ใหม่ไปยังกลุ่ม LINE
  */
 async function sendProjectCreatedMessage(lineGroupId, projectData) {
@@ -32,6 +91,7 @@ async function sendProjectCreatedMessage(lineGroupId, projectData) {
     const flexMessage = {
       type: 'flex',
       altText: `รังใหม่พร้อมลุย! 🍯 สร้างโปรเจกต์ "${projectData.project_name}" แล้วค่า`,
+      quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
         hero: {
@@ -183,6 +243,7 @@ async function sendTaskCreatedMessage(lineGroupId, taskData) {
     const flexMessage = {
       type: 'flex',
       altText: `มีงานงอกจ้า 🐝 สร้างงาน "${taskData.task_name}" แล้ว`,
+      quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
         hero: {
@@ -357,6 +418,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     const flexMessage = {
       type: 'flex',
       altText: `งาน "${task_name}" เปลี่ยนเป็น ${newStatusInfo.text}`,
+      quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
         hero: {
@@ -701,6 +763,7 @@ async function sendDeadlineReminder(lineGroupId, tasksData) {
     const flexMessage = {
       type: 'flex',
       altText: `แจ้งเตือน: มี ${tasksData.length} งานใกล้ถึงเดดไลน์`,
+      quickReply: buildQuickReply(),
       contents: {
         type: 'carousel',
         contents: taskBubbles
@@ -749,6 +812,7 @@ async function sendProjectCompletedMessage(lineGroupId, projectData) {
     const flexMessage = {
       type: 'flex',
       altText: `ปิดจ๊อบสวยๆ! 🎉 โปรเจกต์ "${projectData.project_name}" รอดตายแล้วพวกเรา!`,
+      quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
         size: 'giga',
@@ -1137,6 +1201,7 @@ async function sendWorkspaceInviteMessage(lineGroupId, sessionData) {
     const flexMessage = {
       type: 'flex',
       altText: `${user.display_name || 'สมาชิก'} เริ่ม Focus Session แล้ว!`,
+      quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1275,6 +1340,7 @@ async function sendMeetingNotification(lineGroupId, meetingData) {
     const flexMessage = {
       type: 'flex',
       altText: `โครงสร้างการนัดหมาย: ${title}`,
+      quickReply: buildQuickReply(),
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1459,6 +1525,7 @@ async function sendMeetingReminderNotification(lineGroupId, meetingData) {
     const flexMessage = {
       type: 'flex',
       altText: `เตือนการประชุม: ${title}`,
+      quickReply: buildQuickReply(),
       contents: {
         type: 'bubble',
         size: 'mega',
@@ -1619,6 +1686,7 @@ async function sendMeetingCancelledNotification(lineGroupId, meetingData) {
     const flexMessage = {
       type: 'flex',
       altText: `ยกเลิกการนัดหมาย: ${title}`,
+      quickReply: buildQuickReply(),
       contents: {
         type: 'bubble',
         header: {
@@ -1738,6 +1806,7 @@ async function sendMeetingRescheduleNotification(lineGroupId, meetingData) {
     const flexMessage = {
       type: 'flex',
       altText: `เลื่อนเวลาการประชุม: ${title}`,
+      quickReply: buildQuickReply(),
       contents: {
         type: 'bubble',
         header: {
@@ -1900,6 +1969,7 @@ async function sendTimeUpNotification(lineGroupId, sessionData) {
     const flexMessage = {
       type: 'flex',
       altText: `หมดเวลาโฟกัสของ ${user.display_name || 'สมาชิก'} แล้ว`,
+      quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
         size: 'mega',
