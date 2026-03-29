@@ -415,45 +415,44 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${project.project_id}`;
 
+    // สร้าง status emoji สำหรับ badge
+    const statusEmoji = {
+      'todo': '📋',
+      'in_progress': '🔥',
+      'reviewing': '👀',
+      'submitted': '🎯',
+      'completed': '✅'
+    };
+    const statusEmoji_str = statusEmoji[status] || '📌';
+    
+    // สำหรับตัวอย่าง - ในการใช้จริง ต้องเพิ่มข้อมูลเหล่านี้จาก taskData
+    const progressPercent = taskData.progress_percent || 0;
+    const completedSubtasks = taskData.completed_subtasks || 0;
+    const totalSubtasks = taskData.total_subtasks || 0;
+
     const flexMessage = {
       type: 'flex',
       altText: `งาน "${task_name}" เปลี่ยนเป็น ${newStatusInfo.text}`,
       quickReply: buildQuickReply(projectUrl),
       contents: {
         type: 'bubble',
-        hero: {
+        size: 'kilo',
+        header: {
           type: 'box',
-          layout: 'vertical',
+          layout: 'horizontal',
+          backgroundColor: newStatusInfo.color,
           contents: [
             {
-              type: 'box',
-              layout: 'horizontal',
-              spacing: 'sm',
-              alignItems: 'center',
-              contents: [
-                {
-                  type: 'text',
-                  text: `มีคนขยับงานละ!`,
-                  weight: 'bold',
-                  size: 'lg',
-                  color: THEME.text,
-                  flex: 1
-                },
-                {
-                  type: 'image',
-                  url: 'https://res.cloudinary.com/dxghmigpi/image/upload/v1772340880/minibee_thdnod.png',
-                  size: 'md',
-                  aspectMode: 'cover',
-                  flex: 0
-                }
-              ]
+              type: 'text',
+              text: 'งานขยับแล้ว!',
+              weight: 'bold',
+              color: THEME.white,
+              size: 'sm',
+              wrap: true,
+              gravity: 'center'
             }
           ],
-          backgroundColor: newStatusInfo.color,
-          paddingStart: "15px",
-          paddingEnd: "15px",
-          paddingBottom: "0px",
-          paddingTop: "0px"
+          paddingAll: '15px'
         },
         body: {
           type: 'box',
@@ -461,44 +460,50 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
           contents: [
             {
               type: 'text',
+              text: `โปรเจกต์: ${project.project_name}`,
+              size: 'xs',
+              color: THEME.muted,
+              weight: 'bold'
+            },
+            {
+              type: 'text',
               text: task_name,
               weight: 'bold',
-              size: 'md',
-              wrap: true,
+              size: 'xl',
+              margin: 'md',
               color: THEME.text
             },
             {
               type: 'box',
-              layout: 'baseline',
+              layout: 'horizontal',
               margin: 'md',
               contents: [
                 {
-                  type: 'text',
-                  text: 'โปรเจกต์:',
-                  size: 'xs',
-                  color: THEME.muted,
-                  flex: 0,
-                  margin: 'none'
-                },
-                {
-                  type: 'text',
-                  text: project.project_name,
-                  size: 'xs',
-                  color: THEME.text,
-                  wrap: true,
-                  margin: 'sm'
+                  type: 'box',
+                  layout: 'baseline',
+                  backgroundColor: '#FEE2E2',
+                  cornerRadius: '20px',
+                  paddingStart: '10px',
+                  paddingEnd: '10px',
+                  paddingTop: '4px',
+                  paddingBottom: '4px',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: `${statusEmoji_str} ${newStatusInfo.text}`,
+                      color: '#DC2626',
+                      size: 'xs',
+                      weight: 'bold'
+                    }
+                  ],
+                  flex: 0
                 }
               ]
-            },
-            {
-              type: 'separator',
-              margin: 'lg'
             },
             {
               type: 'box',
               layout: 'vertical',
               margin: 'lg',
-              spacing: 'sm',
               contents: [
                 {
                   type: 'box',
@@ -506,62 +511,94 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                   contents: [
                     {
                       type: 'text',
-                      text: 'สถานะใหม่:',
-                      size: 'sm',
+                      text: 'ความคืบหน้าของงาน',
+                      size: 'xs',
                       color: THEME.muted,
-                      flex: 0
+                      flex: 1
                     },
                     {
                       type: 'text',
-                      text: `${newStatusInfo.text}`,
-                      size: 'sm',
-                      color: THEME.text,
+                      text: `${progressPercent}%`,
+                      size: 'xs',
+                      color: THEME.muted,
                       align: 'end',
+                      flex: 1,
                       weight: 'bold'
                     }
                   ]
                 },
+                {
+                  type: 'box',
+                  layout: 'horizontal',
+                  height: '6px',
+                  margin: 'sm',
+                  backgroundColor: '#E5E7EB',
+                  cornerRadius: '3px',
+                  contents: [
+                    {
+                      type: 'box',
+                      layout: 'horizontal',
+                      width: `${progressPercent}%`,
+                      backgroundColor: newStatusInfo.color,
+                      cornerRadius: '3px',
+                      contents: []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              type: 'separator',
+              margin: 'xl',
+              color: '#E5E7EB'
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              margin: 'lg',
+              alignItems: 'center',
+              contents: [
+                {
+                  type: 'text',
+                  text: 'คนแบกงาน',
+                  size: 'sm',
+                  color: THEME.muted,
+                  flex: 1
+                },
                 ...(assigned_user ? [{
                   type: 'box',
                   layout: 'horizontal',
-                  margin: 'md',
+                  flex: 2,
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
                   contents: [
-                    {
-                      type: 'text',
-                      text: 'คนแบกงาน:',
-                      size: 'sm',
-                      color: THEME.muted,
-                      flex: 0
-                    },
                     {
                       type: 'text',
                       text: assigned_user.display_name,
                       size: 'sm',
                       color: THEME.text,
-                      align: 'end'
-                    }
-                  ]
-                }] : []),
-                ...(updated_by_user ? [{
-                  type: 'box',
-                  layout: 'horizontal',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: 'คนกดอัปเดต:',
-                      size: 'sm',
-                      color: THEME.muted,
-                      flex: 0
+                      weight: 'bold',
+                      align: 'end',
+                      flex: 0,
+                      margin: 'sm'
                     },
                     {
                       type: 'text',
-                      text: updated_by_user.display_name,
-                      size: 'sm',
-                      color: THEME.text,
-                      align: 'end'
+                      text: totalSubtasks > 0 ? `(เสร็จ ${completedSubtasks}/${totalSubtasks})` : '',
+                      size: 'xxs',
+                      color: THEME.muted,
+                      align: 'end',
+                      flex: 0
                     }
                   ]
-                }] : [])
+                }] : [{
+                  type: 'text',
+                  text: '-',
+                  size: 'sm',
+                  color: THEME.muted,
+                  align: 'end',
+                  flex: 2
+                }])
               ]
             }
           ]
@@ -572,16 +609,17 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
           contents: [
             {
               type: 'button',
-              style: 'secondary',
+              style: 'primary',
+              color: newStatusInfo.color,
               action: {
                 type: 'uri',
                 label: 'แวะไปดูงาน',
                 uri: projectUrl
               },
-              color: newStatusInfo.color,
               height: 'sm'
             }
-          ]
+          ],
+          paddingAll: '15px'
         }
       }
     };
