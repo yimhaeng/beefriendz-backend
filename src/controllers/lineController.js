@@ -508,7 +508,29 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               contents: [
                 {
                   type: 'text',
-                  text: 'ความคืบหน้าของงาน',
+                  text: 'คนแบกงาน',
+                  size: 'sm',
+                  color: THEME.muted,
+                  flex: 0
+                },
+                {
+                  type: 'text',
+                  text: `${assigned_user?.display_name || 'ไม่ระบุ'}(เสร็จ ${completedTasks}/${totalTasks})`,
+                  size: 'sm',
+                  color: THEME.text,
+                  align: 'end',
+                  weight: 'bold'
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              margin: 'lg',
+              contents: [
+                {
+                  type: 'text',
+                  text: 'ความคืบหน้าของโปรเจกต์',
                   size: 'sm',
                   color: THEME.muted,
                   flex: 1
@@ -546,28 +568,6 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
               height: '10px',
               cornerRadius: 'md',
               backgroundColor: '#E5E7EB'
-            },
-            {
-              type: 'box',
-              layout: 'horizontal',
-              margin: 'lg',
-              contents: [
-                {
-                  type: 'text',
-                  text: 'คนแบกงาน',
-                  size: 'sm',
-                  color: THEME.muted,
-                  flex: 0
-                },
-                {
-                  type: 'text',
-                  text: `${assigned_user?.display_name || 'ไม่ระบุ'}(เสร็จ ${completedTasks}/${totalTasks})`,
-                  size: 'sm',
-                  color: THEME.text,
-                  align: 'end',
-                  weight: 'bold'
-                }
-              ]
             }
           ]
         },
