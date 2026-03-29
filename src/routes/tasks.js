@@ -255,6 +255,22 @@ router.put('/:id', async (req, res) => {
             console.log(`[LINE NOTIFICATION ${notificationKey}] LINE Group:`, projectData?.groups?.line_group_id);
             
             if (projectData?.groups?.line_group_id) {
+              // ดึงข้อมูลโปรเจกต์พร้อมสถิติงาน
+              const projectStatsResult = await projectController.getProjectWithTaskStats(task.project.project_id);
+              let projectWithStats = task.project;
+              
+              if (projectStatsResult.success) {
+                projectWithStats = {
+                  ...task.project,
+                  total_tasks: projectStatsResult.data.total_tasks,
+                  completed_tasks: projectStatsResult.data.completed_tasks
+                };
+                console.log(`[LINE NOTIFICATION ${notificationKey}] Project stats:`, {
+                  total_tasks: projectWithStats.total_tasks,
+                  completed_tasks: projectWithStats.completed_tasks
+                });
+              }
+              
               const lineResult = await lineController.sendTaskStatusUpdateMessage(
                 projectData.groups.line_group_id,
                 {
@@ -263,7 +279,7 @@ router.put('/:id', async (req, res) => {
                   old_status: oldStatus,
                   assigned_user: task.assigned_user,
                   updated_by_user: updatedByUser,
-                  project: task.project
+                  project: projectWithStats
                 }
               );
               console.log(`[LINE NOTIFICATION ${notificationKey}] ✅ Sent:`, lineResult.success);

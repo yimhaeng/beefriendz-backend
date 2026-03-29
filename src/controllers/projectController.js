@@ -104,6 +104,70 @@ async function getProjectById(projectId) {
   }
 }
 
+// Get project task statistics (total tasks and completed tasks)
+async function getProjectTaskStats(projectId) {
+  try {
+    const { data: tasks, error } = await supabase
+      .from('project_tasks')
+      .select('task_id, status')
+      .eq('project_id', projectId);
+
+    if (error) throw error;
+
+    if (!tasks || tasks.length === 0) {
+      return {
+        success: true,
+        total_tasks: 0,
+        completed_tasks: 0
+      };
+    }
+
+    const completedCount = tasks.filter(task => task.status === 'completed').length;
+    
+    return {
+      success: true,
+      total_tasks: tasks.length,
+      completed_tasks: completedCount
+    };
+  } catch (error) {
+    console.error('[getProjectTaskStats] Error:', error.message);
+    return {
+      success: false,
+      error: error.message,
+      total_tasks: 0,
+      completed_tasks: 0
+    };
+  }
+}
+
+// Get project with task statistics
+async function getProjectWithTaskStats(projectId) {
+  try {
+    // ดึงข้อมูลโปรเจกต์
+    const projectResult = await getProjectById(projectId);
+    if (!projectResult.success) {
+      throw new Error(projectResult.error);
+    }
+
+    // ดึงสถิติงาน
+    const statsResult = await getProjectTaskStats(projectId);
+    
+    // รวมข้อมูล
+    const project = projectResult.data;
+    return {
+      success: true,
+      data: {
+        ...project,
+        total_tasks: statsResult.total_tasks,
+        completed_tasks: statsResult.completed_tasks
+      }
+    };
+  } catch (error) {
+    console.error('[getProjectWithTaskStats] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 // Create new project
 async function createProject(projectData) {
   try {
@@ -666,6 +730,8 @@ module.exports = {
   // Projects
   getProjectsByGroup,
   getProjectById,
+  getProjectTaskStats,
+  getProjectWithTaskStats,
   createProject,
   updateProject,
   deleteProject,

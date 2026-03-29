@@ -412,6 +412,15 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     const newStatusInfo = statusConfig[status] || { text: status, color: THEME.neutral };
     const oldStatusInfo = statusConfig[old_status] || { text: old_status, color: THEME.neutral };
 
+    // คำนวณ progress จากจำนวนงาน
+    let projectProgress = 0;
+    if (project && project.total_tasks && project.total_tasks > 0) {
+      const completedTasks = project.completed_tasks || 0;
+      projectProgress = Math.round((completedTasks / project.total_tasks) * 100);
+    } else if (taskData.progress) {
+      projectProgress = taskData.progress;
+    }
+
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${project.project_id}`;
 
@@ -494,7 +503,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                         {
                           type: 'box',
                           layout: 'vertical',
-                          width: `${taskData.progress || 0}%`,
+                          width: `${projectProgress}%`,
                           height: '12px',
                           backgroundColor: THEME.primary,
                           cornerRadius: 'md'
@@ -509,7 +518,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                     },
                     {
                       type: 'text',
-                      text: `${taskData.progress || 0}%`,
+                      text: `${projectProgress}%`,
                       size: 'xs',
                       color: THEME.text,
                       align: 'end',
