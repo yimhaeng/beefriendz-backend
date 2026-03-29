@@ -412,17 +412,14 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
     const newStatusInfo = statusConfig[status] || { text: status, color: THEME.neutral };
     const oldStatusInfo = statusConfig[old_status] || { text: old_status, color: THEME.neutral };
 
-    // คำนวณ progress จากจำนวนงาน
-    let projectProgress = 0;
-    if (project && project.total_tasks && project.total_tasks > 0) {
-      const completedTasks = project.completed_tasks || 0;
-      projectProgress = Math.round((completedTasks / project.total_tasks) * 100);
-    } else if (taskData.progress) {
-      projectProgress = taskData.progress;
-    }
-
     const liffUrl = process.env.LIFF_URL || 'https://liff.line.me/2008277186-xq681oX3';
     const projectUrl = `${liffUrl}/projectdetail/${project.project_id}`;
+
+    // คำนวณ progress จากจำนวนงานที่เสร็จ vs ทั้งหมดในโปรเจกต์
+    const totalTasks = project.total_tasks || 0;
+    const completedTasks = project.completed_tasks || 0;
+    const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const progressWidth = `${progressPercent > 0 ? progressPercent : 1}%`;
 
     const flexMessage = {
       type: 'flex',
@@ -470,63 +467,85 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
           contents: [
             {
               type: 'text',
+              text: `โปรเจกต์: ${project.project_name}`,
+              size: 'xs',
+              color: THEME.muted,
+              margin: 'none'
+            },
+            {
+              type: 'text',
               text: task_name,
               weight: 'bold',
               size: 'lg',
               wrap: true,
               color: THEME.text,
-              margin: 'none'
+              margin: 'sm'
             },
             {
               type: 'box',
-              layout: 'vertical',
+              layout: 'horizontal',
               margin: 'lg',
-              spacing: 'sm',
+              contents: [
+                {
+                  type: 'text',
+                  text: `🔥 ${newStatusInfo.text}`,
+                  size: 'sm',
+                  color: THEME.white,
+                  weight: 'bold',
+                  flex: 0
+                }
+              ],
+              backgroundColor: newStatusInfo.color,
+              cornerRadius: 'xl',
+              paddingAll: '8px',
+              paddingStart: '12px',
+              paddingEnd: '12px'
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              margin: 'lg',
               contents: [
                 {
                   type: 'text',
                   text: 'ความคืบหน้าของงาน',
                   size: 'sm',
                   color: THEME.muted,
-                  margin: 'none'
+                  flex: 1
                 },
+                {
+                  type: 'text',
+                  text: `${progressPercent}%`,
+                  size: 'sm',
+                  color: THEME.text,
+                  align: 'end',
+                  weight: 'bold'
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              margin: 'sm',
+              contents: [
                 {
                   type: 'box',
                   layout: 'vertical',
-                  margin: 'md',
-                  spacing: 'none',
-                  contents: [
-                    {
-                      type: 'box',
-                      layout: 'horizontal',
-                      contents: [
-                        {
-                          type: 'box',
-                          layout: 'vertical',
-                          width: `${projectProgress}%`,
-                          height: '12px',
-                          backgroundColor: THEME.primary,
-                          cornerRadius: 'md'
-                        },
-                        {
-                          type: 'filler'
-                        }
-                      ],
-                      height: '12px',
-                      cornerRadius: 'md',
-                      backgroundColor: THEME.background
-                    },
-                    {
-                      type: 'text',
-                      text: `${projectProgress}%`,
-                      size: 'xs',
-                      color: THEME.text,
-                      align: 'end',
-                      margin: 'sm'
-                    }
-                  ]
+                  contents: [{
+                    type: 'filler'
+                  }],
+                  width: progressWidth,
+                  height: '10px',
+                  backgroundColor: THEME.primary,
+                  cornerRadius: 'md'
+                },
+                {
+                  type: 'filler'
                 }
-              ]
+              ],
+              height: '10px',
+              cornerRadius: 'md',
+              backgroundColor: '#E5E7EB'
             },
             {
               type: 'box',
@@ -542,7 +561,7 @@ async function sendTaskStatusUpdateMessage(lineGroupId, taskData) {
                 },
                 {
                   type: 'text',
-                  text: assigned_user?.display_name || 'ไม่ระบุ',
+                  text: `${assigned_user?.display_name || 'ไม่ระบุ'}(เสร็จ ${completedTasks}/${totalTasks})`,
                   size: 'sm',
                   color: THEME.text,
                   align: 'end',
